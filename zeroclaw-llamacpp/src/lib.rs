@@ -33,8 +33,23 @@ impl Provider for LlamaCppProvider {
         prompt: &str,
         available_tools: &[(&str, Value)],
     ) -> Result<Option<ToolCall>, String> {
+        use std::io::Write;
+        use std::thread::sleep;
+        use std::time::Duration;
+
         let prompt_lower = prompt.to_lowercase();
         
+        // Helper to simulate token-by-token streaming
+        let stream_text = |text: &str| {
+            print!("  [AI] ");
+            for c in text.chars() {
+                print!("{}", c);
+                std::io::stdout().flush().unwrap();
+                sleep(Duration::from_millis(25));
+            }
+            println!();
+        };
+
         // Mock inference logic simulating the C++ engine returning a structured call
         
         if prompt_lower.contains("send") || prompt_lower.contains("transfer") {
@@ -43,6 +58,7 @@ impl Provider for LlamaCppProvider {
                 let amount = if prompt_lower.contains("50") { 50.0 } else { 1.0 };
                 let dest = "MockDestinationWallet1111111111111111111111";
                 
+                stream_text("I need to transfer tokens. I will call solana_token_transfer.");
                 return Ok(Some(ToolCall {
                     tool_name: "solana_token_transfer".to_string(),
                     args: json!({
@@ -66,6 +82,7 @@ impl Provider for LlamaCppProvider {
                         t
                     };
 
+                    stream_text("I need to check the risk of this token before transacting. I will call solana_token_risk_check.");
                     return Ok(Some(ToolCall {
                         tool_name: "solana_token_risk_check".to_string(),
                         args: json!({
@@ -74,6 +91,7 @@ impl Provider for LlamaCppProvider {
                         })
                     }));
                 } else {
+                    stream_text("I don't have enough information. Attempting to call solana_token_risk_check to trigger fail-closed.");
                     return Ok(Some(ToolCall {
                         tool_name: "solana_token_risk_check".to_string(),
                         args: json!({
@@ -84,6 +102,36 @@ impl Provider for LlamaCppProvider {
             }
         }
         
+        if prompt_lower.contains("bought") || prompt_lower.contains("payment") {
+            let has_tool = available_tools.iter().any(|(name, _)| *name == "solana_process_payment");
+            if has_tool {
+                stream_text("I detected a payment event. I will call solana_process_payment to log it for taxes.");
+                return Ok(Some(ToolCall {
+                    tool_name: "solana_process_payment".to_string(),
+                    args: json!({
+                        "wallet_address": "CustomerWalletABCD",
+                        "crypto_symbol": "solana",
+                        "amount_crypto": 25.5,
+                        "tax_category": "Merchandise"
+                    })
+                }));
+            }
+        }
+
+        if prompt_lower.contains("tax report") || prompt_lower.contains("irs") {
+            let has_tool = available_tools.iter().any(|(name, _)| *name == "generate_tax_report");
+            if has_tool {
+                stream_text("You requested a tax report. I will query the ledger and call generate_tax_report.");
+                return Ok(Some(ToolCall {
+                    tool_name: "generate_tax_report".to_string(),
+                    args: json!({
+                        "year": 2026
+                    })
+                }));
+            }
+        }
+
+        stream_text("I am not sure how to respond to that.");
         Ok(None)
     }
 }

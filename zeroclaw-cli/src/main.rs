@@ -33,6 +33,25 @@ fn run_agent_loop(
                     
                     if result.success {
                         println!("  LLM successfully executed tool! Output: {}", result.output);
+                        
+                        // Wallet Interceptor Logic
+                        if result.output.contains("Unsigned transaction") || result.output.contains("Unsigned transfer") {
+                            println!("\n  ========================================================");
+                            println!("  ⚠️ [WALLET INTERCEPTOR] Unsigned Transaction Detected.");
+                            println!("  ========================================================");
+                            println!("  The AI has prepared an action that mutates state, but it lacks private keys.");
+                            println!("  Please plug in your Ledger Hardware Wallet via USB to sign the payload.");
+                            print!("  Press ENTER once the device is connected and unlocked...");
+                            std::io::stdout().flush().unwrap();
+                            
+                            let mut dummy = String::new();
+                            std::io::stdin().read_line(&mut dummy).unwrap();
+                            
+                            println!("  [Ledger Simulator] Handshake successful.");
+                            println!("  [Ledger Simulator] Transaction signed and broadcast to mainnet.");
+                            println!("  ========================================================\n");
+                        }
+
                         break; // Success, exit loop
                     } else {
                         let error_msg = result.error.unwrap_or_else(|| "Unknown security error".to_string());
