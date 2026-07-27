@@ -19,7 +19,7 @@ impl ProcessPaymentTool {
                 wallet_address TEXT NOT NULL,
                 amount_usd REAL NOT NULL,
                 tax_category TEXT NOT NULL,
-                receipt_digest TEXT NOT NULL
+                receipt_signature TEXT NOT NULL
             )",
             [],
         ).unwrap();
@@ -31,7 +31,7 @@ impl ProcessPaymentTool {
 
     fn fail(&self, msg: String, args: &Value, ctx: &ToolContext) -> ToolResult {
         let error = Some(msg);
-        let receipt = CryptographicReceipt::generate(&ctx.ephemeral_session_key, self.name(), args, false, "", error.as_ref());
+        let receipt = CryptographicReceipt::generate(&ctx.identity_key_bytes, self.name(), args, false, "", error.as_ref());
         ToolResult { success: false, output: String::new(), error, receipt: Some(receipt) }
     }
 }
@@ -53,9 +53,14 @@ impl Tool for ProcessPaymentTool {
                     "type": "string",
                     "description": "The Solana wallet address making the payment"
                 },
-                "amount_usd": {
+                "crypto_symbol": {
+                    "type": "string",
+                    "enum": ["solana", "usd-coin"],
+                    "description": "The CoinGecko ID for the cryptocurrency (e.g., 'solana', 'usd-coin')"
+                },
+                "amount_crypto": {
                     "type": "number",
-                    "description": "The equivalent USD amount of the payment"
+                    "description": "The amount of crypto paid"
                 },
                 "tax_category": {
                     "type": "string",
@@ -63,7 +68,7 @@ impl Tool for ProcessPaymentTool {
                     "description": "The IRS tax category for this payment"
                 }
             },
-            "required": ["wallet_address", "amount_usd", "tax_category"]
+            "required": ["wallet_address", "crypto_symbol", "amount_crypto", "tax_category"]
         })
     }
 
@@ -73,9 +78,14 @@ impl Tool for ProcessPaymentTool {
             None => return self.fail("Missing or invalid wallet_address".to_string(), &args, ctx),
         };
 
-        let amount = match args.get("amount_usd").and_then(|v| v.as_f64()) {
+        let crypto_amount = match args.get("amount_crypto").and_then(|v| v.as_f64()) {
             Some(a) if a > 0.0 => a,
             _ => return self.fail("Amount must be greater than 0".to_string(), &args, ctx),
+        };
+
+        let crypto_id = match args.get("crypto_symbol").and_then(|v| v.as_str()) {
+            Some(c) => c.to_string(),
+            None => return self.fail("Missing crypto_symbol".to_string(), &args, ctx),
         };
 
         let category = match args.get("tax_category").and_then(|v| v.as_str()) {
@@ -83,17 +93,36 @@ impl Tool for ProcessPaymentTool {
             None => return self.fail("Missing tax_category".to_string(), &args, ctx),
         };
 
-        let output = format!("Payment of ${} processed and securely logged to tax ledger under category: {}", amount, category);
-        let receipt = CryptographicReceipt::generate(&ctx.ephemeral_session_key, self.name(), &args, true, &output, None);
-        let receipt_digest = receipt.digest.clone();
+        // Live USD Conversion via CoinGecko
+        let url = format!("https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies=usd", crypto_id);
+        let resp = match reqwest::blocking::get(&url) {
+            Ok(r) => r,
+            Err(_) => return self.fail("Failed to fetch live price data from CoinGecko API".to_string(), &args, ctx),
+        };
+
+        let price_json: Value = match resp.json() {
+            Ok(j) => j,
+            Err(_) => return self.fail("Failed to parse live price data".to_string(), &args, ctx),
+        };
+
+        let price_usd = match price_json.get(&crypto_id).and_then(|obj| obj.get("usd")).and_then(|usd| usd.as_f64()) {
+            Some(p) => p,
+            None => return self.fail("Could not determine live USD price for crypto".to_string(), &args, ctx),
+        };
+
+        let amount_usd = crypto_amount * price_usd;
+
+        let output = format!("Payment of {} {} processed at ${:.2}/each and securely logged to tax ledger under category: {} (Total: ${:.2} USD)", crypto_amount, crypto_id, price_usd, category, amount_usd);
+        let receipt = CryptographicReceipt::generate(&ctx.identity_key_bytes, self.name(), &args, true, &output, None);
+        let receipt_signature = receipt.signature.clone();
         
         let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
 
         let conn = Connection::open(&self.db_path).unwrap();
         conn.execute(
-            "INSERT INTO taxable_events (timestamp, wallet_address, amount_usd, tax_category, receipt_digest)
+            "INSERT INTO taxable_events (timestamp, wallet_address, amount_usd, tax_category, receipt_signature)
              VALUES (?1, ?2, ?3, ?4, ?5)",
-            rusqlite::params![timestamp, wallet, amount, category, receipt_digest],
+            rusqlite::params![timestamp, wallet, amount_usd, category, receipt_signature],
         ).unwrap();
 
         ToolResult {
@@ -119,7 +148,7 @@ impl GenerateTaxReportTool {
 
     fn fail(&self, msg: String, args: &Value, ctx: &ToolContext) -> ToolResult {
         let error = Some(msg);
-        let receipt = CryptographicReceipt::generate(&ctx.ephemeral_session_key, self.name(), args, false, "", error.as_ref());
+        let receipt = CryptographicReceipt::generate(&ctx.identity_key_bytes, self.name(), args, false, "", error.as_ref());
         ToolResult { success: false, output: String::new(), error, receipt: Some(receipt) }
     }
 }
@@ -153,7 +182,7 @@ impl Tool for GenerateTaxReportTool {
         };
 
         let conn = Connection::open(&self.db_path).unwrap();
-        let mut stmt = conn.prepare("SELECT timestamp, wallet_address, amount_usd, tax_category, receipt_digest FROM taxable_events").unwrap();
+        let mut stmt = conn.prepare("SELECT timestamp, wallet_address, amount_usd, tax_category, receipt_signature FROM taxable_events").unwrap();
         
         let event_iter = stmt.query_map([], |row| {
             Ok((
@@ -187,7 +216,7 @@ impl Tool for GenerateTaxReportTool {
         wtr.flush().unwrap();
 
         let output = format!("Successfully aggregated {} taxable events. Total Revenue: ${:.2}. Report saved to '{}'.", count, total_revenue, filename);
-        let receipt = CryptographicReceipt::generate(&ctx.ephemeral_session_key, self.name(), &args, true, &output, None);
+        let receipt = CryptographicReceipt::generate(&ctx.identity_key_bytes, self.name(), &args, true, &output, None);
 
         ToolResult {
             success: true,

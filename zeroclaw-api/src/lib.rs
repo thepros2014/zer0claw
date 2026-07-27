@@ -4,33 +4,30 @@
 //! In accordance with the project philosophy, these traits enforce strict type definitions
 //! and explicitly separate execution results from security boundaries.
 
-use hmac::{Hmac, Mac};
+use ed25519_dalek::{Signature, Signer, SigningKey};
 use serde::{Deserialize, Serialize};
-use sha2::Sha256;
 use std::time::{SystemTime, UNIX_EPOCH};
-
-type HmacSha256 = Hmac<Sha256>;
 
 /// The context in which a tool executes, containing security parameters.
 #[derive(Debug, Clone)]
 pub struct ToolContext {
-    /// An ephemeral key used for cryptographic receipts for this session.
-    pub ephemeral_session_key: Vec<u8>,
+    /// The persistent Ed25519 private key bytes used for cryptographic receipts.
+    pub identity_key_bytes: Vec<u8>,
 }
 
 /// A cryptographic receipt ensuring an immutable audit log of tool execution.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptographicReceipt {
-    /// The HMAC-SHA256 digest of the execution.
-    pub digest: String,
+    /// The Ed25519 signature of the execution (hex encoded).
+    pub signature: String,
     /// The timestamp of execution.
     pub timestamp: u64,
 }
 
 impl CryptographicReceipt {
-    /// Generates a receipt by hashing the session key, tool name, args, result, and timestamp.
+    /// Generates a receipt by signing the tool name, args, result, and timestamp with the Ed25519 key.
     pub fn generate(
-        session_key: &[u8],
+        identity_key_bytes: &[u8],
         tool_name: &str,
         args: &serde_json::Value,
         success: bool,
@@ -42,20 +39,25 @@ impl CryptographicReceipt {
             .unwrap_or_default()
             .as_secs();
 
-        let mut mac = HmacSha256::new_from_slice(session_key).expect("HMAC can take key of any size");
-        
-        mac.update(tool_name.as_bytes());
-        mac.update(args.to_string().as_bytes());
-        mac.update(&[success as u8]);
-        mac.update(output.as_bytes());
+        // Construct the payload to sign
+        let mut payload = Vec::new();
+        payload.extend_from_slice(tool_name.as_bytes());
+        payload.extend_from_slice(args.to_string().as_bytes());
+        payload.push(success as u8);
+        payload.extend_from_slice(output.as_bytes());
         if let Some(err) = error {
-            mac.update(err.as_bytes());
+            payload.extend_from_slice(err.as_bytes());
         }
-        mac.update(&timestamp.to_be_bytes());
+        payload.extend_from_slice(&timestamp.to_be_bytes());
 
-        let digest = hex::encode(mac.finalize().into_bytes());
+        // Sign the payload
+        let secret_key: [u8; 32] = identity_key_bytes.try_into().expect("Identity key must be exactly 32 bytes");
+        let signing_key = SigningKey::from_bytes(&secret_key);
+        let sig: Signature = signing_key.sign(&payload);
+        
+        let signature = hex::encode(sig.to_bytes());
 
-        Self { digest, timestamp }
+        Self { signature, timestamp }
     }
 }
 

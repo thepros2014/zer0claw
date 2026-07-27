@@ -96,14 +96,37 @@ fn main() {
     let provider = Box::new(LlamaCppProvider::new("C:/Users/plumb/models/llama3-8b.gguf").expect("Failed to init LlamaCppProvider"));
 
     // 4. Establish Session Context
-    println!("[4/5] Generating ephemeral session key...");
-    let session_key = b"super_secret_ephemeral_key_2026".to_vec();
+    println!("[4/5] Loading Persistent Identity (Ed25519)...");
+    
+    let identity_file = ".zeroclaw_identity";
+    let identity_key_bytes = if std::path::Path::new(identity_file).exists() {
+        std::fs::read(identity_file).expect("Failed to read identity file")
+    } else {
+        use ed25519_dalek::SigningKey;
+        use rand::rngs::OsRng;
+        
+        let mut csprng = OsRng;
+        let signing_key = SigningKey::generate(&mut csprng);
+        let secret_bytes = signing_key.to_bytes().to_vec();
+        
+        std::fs::write(identity_file, &secret_bytes).expect("Failed to write identity file");
+        println!("      Generated new Persistent Identity key and saved to {}", identity_file);
+        secret_bytes
+    };
+
     let ctx = ToolContext {
-        ephemeral_session_key: session_key,
+        identity_key_bytes,
     };
 
     // 5. Autonomous Executions with Agentic Loop
     println!("\n[5/5] Running Autonomous Agentic Loop...");
+
+    let _simulation_prompts = vec![
+        "Hey AI, I need a transaction but I forgot the token.",
+        "Please send 50 tokens to address MockDestinationWallet1111111111111111111111.",
+        "A customer just bought a T-Shirt for 25.5 solana from wallet CustomerWalletABCD. Please process the payment under Merchandise.",
+        "Please generate my end-of-year tax report for 2026 so I can send it to the IRS."
+    ];
 
     use std::io::{self, Write};
     println!("ZeroClaw Interactive Mode Started. Type 'exit' to quit.");
@@ -147,7 +170,7 @@ fn main() {
         println!("  Success: {}", t_res.success);
         
         if let Some(receipt) = &t_res.receipt {
-            println!("  Receipt Digest (HMAC-SHA256): {}", receipt.digest);
+            println!("  Receipt Signature (Ed25519): {}", receipt.signature);
             println!("  Timestamp: {}", receipt.timestamp);
         } else {
             println!("  Receipt: NONE");

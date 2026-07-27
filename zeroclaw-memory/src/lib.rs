@@ -32,7 +32,7 @@ impl SqliteMemory {
                 success BOOLEAN NOT NULL,
                 output TEXT NOT NULL,
                 error TEXT,
-                receipt_digest TEXT,
+                receipt_signature TEXT,
                 receipt_timestamp INTEGER,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )",
@@ -52,13 +52,13 @@ impl Memory for SqliteMemory {
         let conn = self.conn.lock().unwrap();
         
         let (digest, timestamp) = match &result.receipt {
-            Some(receipt) => (Some(receipt.digest.clone()), Some(receipt.timestamp)),
+            Some(receipt) => (Some(receipt.signature.clone()), Some(receipt.timestamp)),
             None => (None, None),
         };
 
         conn.execute(
             "INSERT INTO audit_log (
-                tool_name, args, success, output, error, receipt_digest, receipt_timestamp
+                tool_name, args, success, output, error, receipt_signature, receipt_timestamp
             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
             params![
                 tool_name,
@@ -77,7 +77,7 @@ impl Memory for SqliteMemory {
     fn get_audit_trail(&self) -> Result<Vec<(String, String, ToolResult)>, String> {
         let conn = self.conn.lock().unwrap();
         let mut stmt = conn
-            .prepare("SELECT tool_name, args, success, output, error, receipt_digest, receipt_timestamp FROM audit_log ORDER BY id ASC")
+            .prepare("SELECT tool_name, args, success, output, error, receipt_signature, receipt_timestamp FROM audit_log ORDER BY id ASC")
             .map_err(|e| e.to_string())?;
 
         let iter = stmt.query_map([], |row| {
@@ -86,10 +86,10 @@ impl Memory for SqliteMemory {
             let success: bool = row.get(2)?;
             let output: String = row.get(3)?;
             let error: Option<String> = row.get(4)?;
-            let receipt_digest: Option<String> = row.get(5)?;
+            let receipt_signature: Option<String> = row.get(5)?;
             let receipt_timestamp: Option<u64> = row.get(6)?;
 
-            let receipt = match (receipt_digest, receipt_timestamp) {
+            let receipt = match (receipt_signature, receipt_timestamp) {
                 (Some(digest), Some(timestamp)) => Some(zeroclaw_api::CryptographicReceipt {
                     digest,
                     timestamp,
@@ -154,7 +154,7 @@ mod tests {
         assert!(ret_result.receipt.is_some());
         
         let retrieved_receipt = ret_result.receipt.as_ref().unwrap();
-        assert_eq!(retrieved_receipt.digest, "fake_digest_hex");
+        assert_eq!(retrieved_receipt.signature, "fake_digest_hex");
         assert_eq!(retrieved_receipt.timestamp, 123456789);
     }
 }
