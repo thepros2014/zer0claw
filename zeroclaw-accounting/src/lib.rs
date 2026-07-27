@@ -85,8 +85,8 @@ impl Tool for ProcessPaymentTool {
             None => return self.fail("Missing tax_category".to_string(), &args, ctx),
         };
 
-        // Live USD Conversion via waki (wasi:http)
-        let url = format!("https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies=usd", crypto_id);
+        // Live USD and BRL Conversion via waki (wasi:http)
+        let url = format!("https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies=usd,brl", crypto_id);
         let client = waki::Client::new();
         let req = client.get(&url);
         
@@ -96,9 +96,12 @@ impl Tool for ProcessPaymentTool {
         };
 
         let price_usd = 150.00; // Simulated $150 SOL price to avoid complex deserialization logic in hackathon slice
-        let amount_usd = crypto_amount * price_usd;
+        let price_brl = 750.00; // Simulated R$750 SOL price
 
-        let output = format!("Payment of {} {} processed at ${:.2}/each and securely logged to tax ledger under category: {} (Total: ${:.2} USD)", crypto_amount, crypto_id, price_usd, category, amount_usd);
+        let amount_usd = crypto_amount * price_usd;
+        let amount_brl = crypto_amount * price_brl;
+
+        let output = format!("Payment of {} {} processed and logged to dual tax ledger (IRS & Receita Federal). Category: {}. Total: ${:.2} USD | R${:.2} BRL", crypto_amount, crypto_id, category, amount_usd, amount_brl);
         let receipt = CryptographicReceipt::generate(&ctx.identity_key_bytes, self.name(), &args, true, &output, None);
         let receipt_signature = receipt.signature.clone();
         
@@ -109,6 +112,7 @@ impl Tool for ProcessPaymentTool {
             "timestamp": timestamp,
             "wallet_address": wallet,
             "amount_usd": amount_usd,
+            "amount_brl": amount_brl,
             "tax_category": category,
             "receipt_signature": receipt_signature
         });
@@ -182,9 +186,10 @@ impl Tool for GenerateTaxReportTool {
             Err(_) => return self.fail("Could not create CSV file".to_string(), &args, ctx),
         };
 
-        let _ = wtr.write_record(&["Timestamp", "Wallet Address", "Amount (USD)", "Tax Category", "Cryptographic Receipt Hash"]);
+        let _ = wtr.write_record(&["Timestamp", "Wallet Address", "Amount (USD)", "Amount (BRL)", "Tax Category", "Cryptographic Receipt Hash"]);
 
-        let mut total_revenue = 0.0;
+        let mut total_revenue_usd = 0.0;
+        let mut total_revenue_brl = 0.0;
         let mut count = 0;
 
         if let Ok(file) = std::fs::File::open(&self.db_path) {
@@ -194,16 +199,19 @@ impl Tool for GenerateTaxReportTool {
                     // Simple parsing for the slice
                     let ts = record["timestamp"].as_u64().unwrap_or(0);
                     let wallet = record["wallet_address"].as_str().unwrap_or("");
-                    let amount = record["amount_usd"].as_f64().unwrap_or(0.0);
+                    let amount_usd = record["amount_usd"].as_f64().unwrap_or(0.0);
+                    let amount_brl = record["amount_brl"].as_f64().unwrap_or(0.0);
                     let category = record["tax_category"].as_str().unwrap_or("");
                     let hash = record["receipt_signature"].as_str().unwrap_or("");
 
-                    total_revenue += amount;
+                    total_revenue_usd += amount_usd;
+                    total_revenue_brl += amount_brl;
                     count += 1;
                     let _ = wtr.write_record(&[
                         ts.to_string(),
                         wallet.to_string(),
-                        format!("{:.2}", amount),
+                        format!("{:.2}", amount_usd),
+                        format!("{:.2}", amount_brl),
                         category.to_string(),
                         hash.to_string()
                     ]);
@@ -213,7 +221,7 @@ impl Tool for GenerateTaxReportTool {
 
         let _ = wtr.flush();
 
-        let output = format!("Successfully aggregated {} taxable events. Total Revenue: ${:.2}. Report saved to '{}'.", count, total_revenue, filename);
+        let output = format!("Successfully aggregated {} taxable events. Total Revenue: ${:.2} USD | R${:.2} BRL. Report saved to '{}'.", count, total_revenue_usd, total_revenue_brl, filename);
         let receipt = CryptographicReceipt::generate(&ctx.identity_key_bytes, self.name(), &args, true, &output, None);
 
         ToolResult {

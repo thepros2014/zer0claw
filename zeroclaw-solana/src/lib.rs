@@ -246,13 +246,11 @@ impl Tool for SolanaTransferTool {
             }
         };
 
-        let _mock_tx_data = format!("UNSIGNED_TRANSFER: {} TO {}", amount, destination);
-        // Fallback to base64 encoding without external crate to minimize WASM size
-        let base64_tx = "V0FTTV9CQVNFNjRfU0lNVUxBVEVE";
+        let solana_pay_url = format!("solana:{}?amount={}", destination, amount);
 
         let output = format!(
-            "Unsigned transfer transaction generated: {}. Please sign it using your wallet.",
-            base64_tx
+            "Solana Pay Transaction URL generated: {}. Please click the link or scan it with your wallet app (like Phantom) to approve and broadcast the payment.",
+            solana_pay_url
         );
 
         let receipt = CryptographicReceipt::generate(
@@ -339,6 +337,6 @@ mod tests {
             &ctx,
         );
         assert!(result.success);
-        assert!(result.output.contains("Unsigned transfer transaction"));
+        assert!(result.output.contains("solana:DestWallet11111111111111111111111111111111?amount=50.5"));
     }
 }
