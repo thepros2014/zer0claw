@@ -54,7 +54,16 @@ Our Tier 2 production architecture elevates the agent to a **Proposer on a Squad
 - **Blockhash Expiry is eliminated**, as proposed multisig transactions live on-chain indefinitely.
 - The human operator logs into the Squads dApp in the morning with their Ledger and clicks a single "Execute All" button.
 
-## 7. Reproducibility
-Another operator can clone this repository, drop the `zeroclaw-solana` crate into their ZeroClaw `plugins/` directory, update the `.toml` config to include `permissions = ["http_client"]`, and instantly grant their local agent fail-closed risk analysis and secure payment generation.
+## 7. Reproducibility & One-Click Enterprise Deployment
+We have included cross-platform installation scripts (`enterprise_install.sh` and `enterprise_install.ps1`) to instantly provision a secure, air-gapped terminal node.
+
+Simply run the script:
+```bash
+./enterprise_install.sh
+```
+This will automatically:
+1. Cross-compile the plugins to highly optimized `wasm32-wasip2` binaries in `--release` mode.
+2. Build a local `dist/enterprise_zeroclaw_node/` deployment directory.
+3. Auto-generate the `zeroclaw.toml` configuration to explicitly grant `http_client` sandbox permissions so the Risk Engine and Accounting modules can hit the Solana RPC and CoinGecko feeds.
 
 *The full code is available in this repository.*
