@@ -3,6 +3,8 @@ name = "zeroclaw-accounting"
 version = "0.1.0"
 edition = "2021"
 description = "Automated Payment Processor & Tax Accounting Plugin for ZeroClaw"
+[lib]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 zeroclaw-api = { path = "../zeroclaw-api" }
