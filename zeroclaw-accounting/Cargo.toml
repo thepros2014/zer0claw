@@ -1,0 +1,11 @@
+[package]
+name = "zeroclaw-accounting"
+version = "0.1.0"
+edition = "2021"
+description = "Automated Payment Processor & Tax Accounting Plugin for ZeroClaw"
+
+[dependencies]
+zeroclaw-api = { path = "../zeroclaw-api" }
+serde_json = "1.0"
+rusqlite = { version = "0.31", features = ["bundled"] }
+csv = "1.3"

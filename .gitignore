@@ -1,0 +1,7 @@
+target/
+models/
+*.gguf
+*.db
+*.sqlite
+*.sqlite3
+.cache/

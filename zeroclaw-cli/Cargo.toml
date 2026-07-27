@@ -1,0 +1,17 @@
+[package]
+name = "zeroclaw-cli"
+version = "0.1.0"
+edition = "2021"
+description = "CLI Runtime for the ZeroClaw AI Framework"
+
+[dependencies]
+zeroclaw-api = { path = "../zeroclaw-api" }
+zeroclaw-solana = { path = "../zeroclaw-solana" }
+zeroclaw-memory = { path = "../zeroclaw-memory" }
+zeroclaw-provider = { path = "../zeroclaw-provider" }
+zeroclaw-openai = { path = "../zeroclaw-openai" }
+zeroclaw-ollama = { path = "../zeroclaw-ollama" }
+zeroclaw-llamacpp = { path = "../zeroclaw-llamacpp" }
+zeroclaw-accounting = { path = "../zeroclaw-accounting" }
+serde_json = "1.0"
+rusqlite = { version = "0.31", features = ["bundled"] }

@@ -1,0 +1,9 @@
+[package]
+name = "zeroclaw-llamacpp"
+version = "0.1.0"
+edition = "2021"
+description = "Hardcoded Air-Gapped LLM Provider (llama.cpp) for ZeroClaw"
+
+[dependencies]
+zeroclaw-api = { path = "../zeroclaw-api" }
+serde_json = "1.0"
