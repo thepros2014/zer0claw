@@ -1,115 +1,113 @@
 //! ZeroClaw Durable Memory Backend
 //!
-//! Provides a SQLite implementation of the `Memory` trait to ensure
-//! complete auditability and transparency of the agent's actions.
+//! Provides a JSONL flat-file implementation of the `Memory` trait to ensure
+//! complete auditability and transparency of the agent's actions within WASM.
 
-use rusqlite::{params, Connection};
+use serde_json::json;
+use std::fs::OpenOptions;
+use std::io::{BufRead, BufReader, Write};
 use std::sync::{Arc, Mutex};
 use zeroclaw_api::{Memory, ToolResult};
 
-/// A SQLite-backed implementation of the `Memory` trait.
-pub struct SqliteMemory {
-    conn: Arc<Mutex<Connection>>,
+/// A JSONL-backed implementation of the `Memory` trait.
+pub struct FileMemory {
+    file_path: Arc<Mutex<String>>,
 }
 
-impl SqliteMemory {
-    /// Creates a new SqliteMemory instance using an in-memory database or a file.
-    pub fn new(conn: Connection) -> Result<Self, rusqlite::Error> {
-        let memory = Self {
-            conn: Arc::new(Mutex::new(conn)),
+impl FileMemory {
+    /// Creates a new FileMemory instance using a flat file.
+    pub fn new(path: &str) -> Result<Self, String> {
+        let actual_path = if path.ends_with(".db") {
+            path.replace(".db", ".jsonl")
+        } else {
+            path.to_string()
         };
-        memory.initialize()?;
-        Ok(memory)
-    }
 
-    fn initialize(&self) -> Result<(), rusqlite::Error> {
-        let conn = self.conn.lock().unwrap();
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS audit_log (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                tool_name TEXT NOT NULL,
-                args TEXT NOT NULL,
-                success BOOLEAN NOT NULL,
-                output TEXT NOT NULL,
-                error TEXT,
-                receipt_signature TEXT,
-                receipt_timestamp INTEGER,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )",
-            [],
-        )?;
-        Ok(())
+        // Ensure file exists
+        OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&actual_path)
+            .map_err(|e| e.to_string())?;
+
+        Ok(Self {
+            file_path: Arc::new(Mutex::new(actual_path)),
+        })
     }
 }
 
-impl Memory for SqliteMemory {
+impl Memory for FileMemory {
     fn log_tool_execution(
         &self,
         tool_name: &str,
         args: &serde_json::Value,
         result: &ToolResult,
     ) -> Result<(), String> {
-        let conn = self.conn.lock().unwrap();
+        let path = self.file_path.lock().unwrap();
         
-        let (digest, timestamp) = match &result.receipt {
+        let (signature, timestamp) = match &result.receipt {
             Some(receipt) => (Some(receipt.signature.clone()), Some(receipt.timestamp)),
             None => (None, None),
         };
 
-        conn.execute(
-            "INSERT INTO audit_log (
-                tool_name, args, success, output, error, receipt_signature, receipt_timestamp
-            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-            params![
-                tool_name,
-                args.to_string(),
-                result.success,
-                result.output,
-                result.error,
-                digest,
-                timestamp,
-            ],
-        ).map_err(|e| e.to_string())?;
+        let record = json!({
+            "tool_name": tool_name,
+            "args": args.to_string(),
+            "success": result.success,
+            "output": result.output,
+            "error": result.error,
+            "receipt_signature": signature,
+            "receipt_timestamp": timestamp
+        });
+
+        let mut file = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&*path)
+            .map_err(|e| e.to_string())?;
+
+        writeln!(file, "{}", record.to_string()).map_err(|e| e.to_string())?;
 
         Ok(())
     }
 
     fn get_audit_trail(&self) -> Result<Vec<(String, String, ToolResult)>, String> {
-        let conn = self.conn.lock().unwrap();
-        let mut stmt = conn
-            .prepare("SELECT tool_name, args, success, output, error, receipt_signature, receipt_timestamp FROM audit_log ORDER BY id ASC")
-            .map_err(|e| e.to_string())?;
-
-        let iter = stmt.query_map([], |row| {
-            let tool_name: String = row.get(0)?;
-            let args_str: String = row.get(1)?;
-            let success: bool = row.get(2)?;
-            let output: String = row.get(3)?;
-            let error: Option<String> = row.get(4)?;
-            let receipt_signature: Option<String> = row.get(5)?;
-            let receipt_timestamp: Option<u64> = row.get(6)?;
-
-            let receipt = match (receipt_signature, receipt_timestamp) {
-                (Some(digest), Some(timestamp)) => Some(zeroclaw_api::CryptographicReceipt {
-                    digest,
-                    timestamp,
-                }),
-                _ => None,
-            };
-
-            let tool_result = ToolResult {
-                success,
-                output,
-                error,
-                receipt,
-            };
-
-            Ok((tool_name, args_str, tool_result))
-        }).map_err(|e| e.to_string())?;
+        let path = self.file_path.lock().unwrap();
+        let file = std::fs::File::open(&*path).map_err(|e| e.to_string())?;
+        let reader = BufReader::new(file);
 
         let mut results = Vec::new();
-        for item in iter {
-            results.push(item.map_err(|e| e.to_string())?);
+
+        for line in reader.lines().flatten() {
+            if let Ok(record) = serde_json::from_str::<serde_json::Value>(&line) {
+                let tool_name = record["tool_name"].as_str().unwrap_or("").to_string();
+                let args_str = record["args"].as_str().unwrap_or("").to_string();
+                let success = record["success"].as_bool().unwrap_or(false);
+                let output = record["output"].as_str().unwrap_or("").to_string();
+                let error = record["error"].as_str().map(|s| s.to_string());
+                
+                let signature = record["receipt_signature"].as_str().map(|s| s.to_string());
+                let timestamp = record["receipt_timestamp"].as_u64();
+
+                let receipt = match (signature, timestamp) {
+                    (Some(sig), Some(ts)) => Some(zeroclaw_api::CryptographicReceipt {
+                        signature: sig,
+                        timestamp: ts,
+                    }),
+                    _ => None,
+                };
+
+                results.push((
+                    tool_name,
+                    args_str,
+                    ToolResult {
+                        success,
+                        output,
+                        error,
+                        receipt,
+                    },
+                ));
+            }
         }
 
         Ok(results)
@@ -121,11 +119,14 @@ mod tests {
     use super::*;
     use serde_json::json;
     use zeroclaw_api::CryptographicReceipt;
+    use std::fs;
 
     #[test]
-    fn test_sqlite_memory_log_and_retrieve() {
-        let conn = Connection::open_in_memory().unwrap();
-        let memory = SqliteMemory::new(conn).unwrap();
+    fn test_file_memory_log_and_retrieve() {
+        let path = "test_memory.jsonl";
+        let _ = fs::remove_file(path); // clean start
+
+        let memory = FileMemory::new(path).unwrap();
 
         let tool_name = "test_tool";
         let args = json!({"param": "value"});
@@ -134,7 +135,7 @@ mod tests {
             output: "Success!".to_string(),
             error: None,
             receipt: Some(CryptographicReceipt {
-                digest: "fake_digest_hex".to_string(),
+                signature: "fake_digest_hex".to_string(),
                 timestamp: 123456789,
             }),
         };
@@ -156,5 +157,7 @@ mod tests {
         let retrieved_receipt = ret_result.receipt.as_ref().unwrap();
         assert_eq!(retrieved_receipt.signature, "fake_digest_hex");
         assert_eq!(retrieved_receipt.timestamp, 123456789);
+
+        let _ = fs::remove_file(path);
     }
 }

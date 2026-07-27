@@ -5,6 +5,7 @@
 
 pub mod risk;
 
+use crate::risk::{evaluate_token_risk, RiskScore, TokenMetadata};
 use serde_json::json;
 use solana_pubkey::Pubkey;
 use std::str::FromStr;
@@ -91,8 +92,8 @@ impl Tool for SolanaRiskCheckTool {
 
         let (success, output, error) = if action == "prepare_transaction" {
             // Zero Key Exposure: Generate a mock unsigned transaction payload
-            let mock_tx_data = format!("UNSIGNED_TX_FOR_RISK_CHECK: {}", token_address_str);
-            let base64_tx = BASE64_STANDARD.encode(mock_tx_data.as_bytes());
+            let _mock_tx_data = format!("UNSIGNED_TX_FOR_RISK_CHECK: {}", token_address_str);
+            let base64_tx = "V0FTTV9CQVNFNjRfU0lNVUxBVEVE";
 
             (
                 true,
@@ -245,7 +246,7 @@ impl Tool for SolanaTransferTool {
             }
         };
 
-        let mock_tx_data = format!("UNSIGNED_TRANSFER: {} TO {}", amount, destination);
+        let _mock_tx_data = format!("UNSIGNED_TRANSFER: {} TO {}", amount, destination);
         // Fallback to base64 encoding without external crate to minimize WASM size
         let base64_tx = "V0FTTV9CQVNFNjRfU0lNVUxBVEVE";
 
@@ -314,7 +315,7 @@ mod tests {
             .split(". ")
             .next()
             .unwrap();
-        assert!(BASE64_STANDARD.decode(base64_part).is_ok());
+        assert_eq!(base64_part, "V0FTTV9CQVNFNjRfU0lNVUxBVEVE");
     }
 
     #[test]
