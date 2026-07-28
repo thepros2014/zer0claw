@@ -11,6 +11,18 @@ ZeroClaw Commerce provides `wasm32-wasip2` plugins, an async FastAPI Gateway, an
 
 ---
 
+## 📚 Documentation Index (`docs/`)
+
+| Document | Description |
+| :--- | :--- |
+| **[🏆 SUBMISSION.md](./docs/SUBMISSION.md)** | Official Superteam Bounty Submission Breakdown & Rubric Alignment. |
+| **[🛡️ ARCHITECTURE.md](./docs/ARCHITECTURE.md)** | Technical Architecture, WASM Plugins, & 6-Layer Security Model. |
+| **[🔮 VISION.md](./docs/VISION.md)** | Strategic Expansion Roadmap & Institutional Squads Multisig Bridge. |
+| **[🤖 TELEGRAM_BOT.md](./docs/TELEGRAM_BOT.md)** | Telegram Storefront Bot Setup, Commands, & Multi-Wallet Specs. |
+| **[🌐 MULTI_CHANNEL.md](./docs/MULTI_CHANNEL.md)** | Discord Slash Commands & WhatsApp Cloud API Webhook Guide. |
+
+---
+
 ## ⚡ Automagic One-Click Startup (No Manual Setup Required)
 
 Launch the entire stack (FastAPI Gateway + Telegram Bot) with a single command:
@@ -26,16 +38,6 @@ chmod +x start_all.sh
 ./start_all.sh
 ```
 
-The script will automatically:
-1. Start the **FastAPI Commerce Gateway** on `http://127.0.0.1:8000` in the background.
-2. Poll the health-check endpoint until the gateway is 100% online.
-3. Automatically launch the **Telegram Bot**!
-
----
-
-## 🏆 The Superteam Submission
-**Judges:** See [SUBMISSION.md](./SUBMISSION.md) for a technical breakdown of how this architecture meets the rubric requirements, including the **Brazil-First Flow** and resolving the **Blockhash Expiry** issue.
-
 ---
 
 ## 📦 Core Architecture
@@ -48,4 +50,4 @@ The script will automatically:
 ---
 
 ## 🔒 Custody Tier: 1 (Proposer-Only)
-This framework explicitly operates in **Tier 1**. The LLM and the server process hold **zero** private keys. The agent acts strictly as a transaction proposer, returning a Solana Pay URI for human authorization via Phantom, Solflare, or Ledger.
+This framework explicitly operates in **Tier 1**. The LLM and the server process hold **zero** private keys. The agent acts strictly as a transaction proposer, returning a Solana Pay URI for human authorization via Phantom, Solflare, Backpack, or Ledger.
