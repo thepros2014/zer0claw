@@ -1,43 +1,27 @@
-# ZeroClaw Commerce - Automagic One-Click Startup Script (Windows PowerShell)
+# ZeroClaw Commerce - All-In-One Master Startup Script (PowerShell)
 
-Write-Host "🚀 Launching ZeroClaw Commerce System..." -ForegroundColor Cyan
+Write-Host "🛡️ Starting ZeroClaw Commerce Master Stack..." -ForegroundColor Cyan
 
-# Step 1: Launch FastAPI Gateway in background job
-Write-Host "1️⃣ Starting FastAPI Commerce Gateway on port 8000..." -ForegroundColor Yellow
-$GatewayProcess = Start-Process -FilePath "uvicorn" -ArgumentList "app.main:app --host 127.0.0.1 --port 8000" -WorkingDirectory "$PSScriptRoot\fastapi-gateway" -PassThru -NoNewWindow
+# 1. Start FastAPI Gateway
+Write-Host "1️⃣ Starting FastAPI Gateway..." -ForegroundColor Yellow
+Start-Process -FilePath "uvicorn" -ArgumentList "app.main:app --host 127.0.0.1 --port 8000" -WorkingDirectory "$PSScriptRoot\fastapi-gateway" -NoNewWindow
 
-# Step 2: Health Check Wait Loop (Wait until Gateway is ready)
-$MaxRetries = 15
-$Retries = 0
-$GatewayReady = $false
+# 2. Provision Multi-Channel Bot Dependencies
+Write-Host "2️⃣ Provisioning Telegram, Discord, and WhatsApp dependencies..." -ForegroundColor Yellow
+powershell -ExecutionPolicy Bypass -File "$PSScriptRoot\install_bots.ps1"
 
-Write-Host "⏳ Waiting for Gateway health check..." -ForegroundColor Yellow
-while ($Retries -lt $MaxRetries -and -not $GatewayReady) {
-    Start-Sleep -Seconds 1
-    try {
-        $Response = Invoke-WebRequest -Uri "http://127.0.0.1:8000/docs" -UseBasicParsing -TimeoutSec 2 -ErrorAction SilentlyContinue
-        if ($Response.StatusCode -eq 200) {
-            $GatewayReady = $true
-        }
-    } catch {
-        # Keep waiting
-    }
-    $Retries++
+# 3. Start Telegram Storefront Bot
+Write-Host "3️⃣ Starting Telegram Storefront Bot..." -ForegroundColor Yellow
+if (Test-Path "$PSScriptRoot\telegram-bot\bot.py") {
+    Start-Process -FilePath "python" -ArgumentList "bot.py" -WorkingDirectory "$PSScriptRoot\telegram-bot" -NoNewWindow
 }
 
-if ($GatewayReady) {
-    Write-Host "✅ FastAPI Gateway is ONLINE at http://127.0.0.1:8000" -ForegroundColor Green
-} else {
-    Write-Host "⚠️ Gateway taking longer than expected to start, proceeding anyway..." -ForegroundColor Orange
-}
+# 4. Open Setup Wizard in Default Browser
+Start-Sleep -Seconds 2
+Start-Process "http://127.0.0.1:8000/setup"
 
-# Step 3: Launch Telegram Bot
-Write-Host "2️⃣ Starting Telegram Bot..." -ForegroundColor Cyan
-if (Test-Path "$PSScriptRoot\telegram-bot\.env") {
-    Set-Location "$PSScriptRoot\telegram-bot"
-    python bot.py
-} else {
-    Write-Host "⚠️ Notice: telegram-bot\.env file missing. Please ensure TELEGRAM_BOT_TOKEN is configured." -ForegroundColor Red
-    Set-Location "$PSScriptRoot\telegram-bot"
-    python bot.py
-}
+Write-Host "=========================================================================" -ForegroundColor Cyan
+Write-Host " 🎉 ZeroClaw Commerce Master Stack is Live!" -ForegroundColor Green
+Write-Host " 🌐 Dashboard: http://127.0.0.1:8000/dashboard" -ForegroundColor Yellow
+Write-Host " ⚙️ Setup:     http://127.0.0.1:8000/setup" -ForegroundColor Yellow
+Write-Host "=========================================================================" -ForegroundColor Cyan
