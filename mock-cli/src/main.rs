@@ -39,7 +39,7 @@ fn main() {
         thread::sleep(Duration::from_millis(1500));
 
         if input.to_lowercase().contains("pay") && input.to_lowercase().contains("usdc") {
-            println!("Agent: I have prepared the transaction for 50 USDC. However, as a Tier 1 agent, I hold ZERO keys and cannot sign this transaction.");
+            println!("Agent: Invoice queued for 50 USDC. Security policy (Tier 1) blocks me from holding hot keys. Please scan the Solana Pay payload below to authorize:");
             thread::sleep(Duration::from_millis(800));
             
             println!("\n[WALLET INTERCEPTOR TRIGGERED]");
@@ -54,7 +54,7 @@ fn main() {
             
             thread::sleep(Duration::from_millis(2000));
             println!("\n[Network Check: Transaction Confirmed]");
-            println!("Agent: I have detected the transaction successfully settled on the blockchain. Initiating tax accounting plugin...");
+            println!("Agent: On-chain settlement confirmed. Processing dual-currency tax logic...");
             
             thread::sleep(Duration::from_millis(1500));
             let acct_args = json!({
@@ -68,7 +68,7 @@ fn main() {
             println!("Agent: {}", acct_result.output);
             
         } else {
-            println!("Agent: I am currently configured strictly as a Payment and Tax Terminal. Please ask me to pay an invoice or check token risk.");
+            println!("Agent: Unrecognized command. I'm currently locked to Payment and Tax reporting functions. Try asking me to pay an invoice or run a risk check.");
         }
     }
 }
