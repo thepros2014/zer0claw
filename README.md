@@ -59,20 +59,27 @@ zer0claw/
 
 ---
 
-## ⚡ Automagic One-Click Startup (No Manual Setup Required)
+## ⚡ Double-Clickable Automagic Startup (Zero Technical Friction)
 
-Launch the entire stack (FastAPI Gateway + Telegram Bot) with a single command:
+Simply **double-click** the launcher file in Windows File Explorer:
 
-### Windows:
+### 🖱️ Windows (Double-Click):
+Double-click **`Start_ZeroClaw_Commerce.cmd`** in your root folder!
+
+Alternatively via PowerShell:
 ```powershell
 .\start_all.ps1
 ```
 
-### Mac / Linux:
+### 💻 Mac / Linux:
 ```bash
 chmod +x start_all.sh
 ./start_all.sh
 ```
+
+Double-clicking `Start_ZeroClaw_Commerce.cmd` will automatically:
+1. Start the **FastAPI Commerce Gateway** on `http://127.0.0.1:8000` in the background.
+2. Open your default web browser straight to the **First-Time Setup Wizard** (`http://127.0.0.1:8000/setup`)!
 
 ---
 

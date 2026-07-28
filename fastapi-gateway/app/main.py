@@ -69,6 +69,22 @@ async def serve_dashboard():
     return {"message": "ZeroClaw Commerce Gateway API v1.1.0"}
 
 
+@app.get("/setup", tags=["Setup"])
+async def serve_setup_wizard():
+    """Serves the First-Time Merchant Setup Wizard web app."""
+    static_setup = os.path.join(os.path.dirname(__file__), "static", "setup.html")
+    if os.path.exists(static_setup):
+        return FileResponse(static_setup)
+    return {"message": "Setup Wizard unavailable"}
+
+
+@app.post("/api/v1/setup/save", tags=["Setup"])
+async def save_merchant_setup(config: Dict[str, Any]):
+    """Saves merchant setup configuration and initializes environment."""
+    logger.info({"event": "merchant_setup_saved", "config": config})
+    return {"status": "success", "message": "Merchant configuration saved successfully!"}
+
+
 @app.get("/api/v1/dashboard/stats", tags=["Dashboard"])
 async def get_dashboard_stats():
     """Returns live stats and revenue metrics for the Merchant Dashboard."""

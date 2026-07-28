@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroClaw Commerce — First-Time Merchant Setup</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #090D16;
+            --panel-bg: rgba(18, 24, 38, 0.85);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            --solana-green: #14F195;
+            --solana-purple: #9945FF;
+            --text-primary: #FFFFFF;
+            --text-secondary: #94A3B8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background-image: 
+                radial-gradient(circle at 50% 20%, rgba(153, 69, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 50% 80%, rgba(20, 241, 149, 0.1) 0%, transparent 50%);
+        }
+
+        .setup-card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 580px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--solana-purple), var(--solana-green));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin: 0 auto 1rem auto;
+            box-shadow: 0 0 30px rgba(153, 69, 255, 0.4);
+        }
+
+        .title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.4rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.825rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
+            color: white;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--solana-green);
+            box-shadow: 0 0 10px rgba(20, 241, 149, 0.2);
+        }
+
+        .help-text {
+            font-size: 0.775rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 0.3rem;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--solana-purple), #7C3AED);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+
+        .alert-success {
+            display: none;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10B981;
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="setup-card">
+        <div class="header">
+            <div class="header-icon">🛡️</div>
+            <h1 class="title">ZeroClaw Commerce</h1>
+            <p class="subtitle">First-Time Merchant Storefront Setup Wizard</p>
+        </div>
+
+        <form id="setup-form">
+            <div class="form-group">
+                <label for="store_name">Merchant Store Name</label>
+                <input type="text" id="store_name" value="Solana Dev Academy Store" required>
+                <p class="help-text">The display name shown on customer receipts and invoices.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="merchant_wallet">Solana Receiving Wallet Address</label>
+                <input type="text" id="merchant_wallet" value="DestWallet11111111111111111111111111111111" required>
+                <p class="help-text">Where 100% of customer USDC & SOL payments are deposited.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="telegram_token">Telegram Bot Token (from @BotFather)</label>
+                <input type="password" id="telegram_token" placeholder="7890123456:AAFd4b... (Optional for local testing)">
+                <p class="help-text">Message @BotFather on Telegram to get your free bot token.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="max_spend">Max Spend Policy Limit ($USD)</label>
+                <input type="number" id="max_spend" value="100.0" step="10" required>
+                <p class="help-text">WASM Rust Policy-as-Code firewall guardrail limit per invoice.</p>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                🚀 Save Configuration & Launch Storefront
+            </button>
+        </form>
+
+        <div class="alert-success" id="success-alert">
+            ✅ <b>Setup Saved Successfully!</b><br>
+            Redirecting to your Sales & Security Dashboard...
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('setup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                store_name: document.getElementById('store_name').value,
+                merchant_wallet: document.getElementById('merchant_wallet').value,
+                telegram_bot_token: document.getElementById('telegram_token').value,
+                max_spend_policy: parseFloat(document.getElementById('max_spend').value)
+            };
+
+            try {
+                const res = await fetch('/api/v1/setup/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    document.getElementById('setup-form').style.display = 'none';
+                    document.getElementById('success-alert').style.display = 'block';
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1500);
+                } else {
+                    alert('Error saving configuration.');
+                }
+            } catch (err) {
+                // Fallback redirect
+                window.location.href = '/dashboard';
+            }
+        });
+    </script>
+</body>
+</html>
