@@ -131,25 +131,34 @@ async def fn_buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 invoice_id = data["invoice_id"]
                 symbol = "USDC" if product["crypto_symbol"] == "usd-coin" else "SOL"
 
-                # Encode Phantom deep link
-                phantom_deep_link = f"https://phantom.app/ul/browse/{urllib.parse.quote(solana_pay_url)}?ref=solona"
+                # Multi-Wallet Deep Links
+                encoded_url = urllib.parse.quote(solana_pay_url)
+                phantom_link = f"https://phantom.app/ul/browse/{encoded_url}?ref=zeroclaw"
+                solflare_link = f"https://solflare.com/ul/v1/browse/{encoded_url}?ref=zeroclaw"
+                backpack_link = f"https://backpack.app/ul/browse/{encoded_url}?ref=zeroclaw"
 
                 msg = (
                     f"✅ <b>Invoice Created:</b> <code>{invoice_id}</code>\n\n"
                     f"Item: <b>{product['name']}</b>\n"
                     f"Amount Due: <b>{product['amount_crypto']} {symbol}</b>\n"
                     f"Expires in: <b>15 minutes</b>\n\n"
-                    f"📱 <b>Solana Pay Payload:</b>\n"
+                    f"📱 <b>Solana Pay Payload (Works with ALL Wallets):</b>\n"
                     f"<code>{solana_pay_url}</code>\n\n"
-                    f"<b>How to Pay:</b>\n"
-                    f"1. Copy the payload above or click Phantom button below.\n"
-                    f"2. Sign & broadcast the transaction in Phantom/Solflare.\n"
+                    f"<b>Select Your Wallet Below:</b>\n"
+                    f"1. Click your mobile wallet button below or copy the payload above.\n"
+                    f"2. Sign & broadcast the transaction in Phantom, Solflare, Backpack, or Ledger.\n"
                     f"3. Copy your transaction signature and run:\n"
                     f"<code>/verify {invoice_id} &lt;YOUR_TX_SIGNATURE&gt;</code>"
                 )
 
                 keyboard = [
-                    [InlineKeyboardButton("📱 Pay via Phantom Wallet", url=phantom_deep_link)],
+                    [
+                        InlineKeyboardButton("🟣 Phantom", url=phantom_link),
+                        InlineKeyboardButton("🟠 Solflare", url=solflare_link),
+                    ],
+                    [
+                        InlineKeyboardButton("🎒 Backpack Wallet", url=backpack_link),
+                    ],
                 ]
                 reply_markup = InlineKeyboardMarkup(keyboard)
 
