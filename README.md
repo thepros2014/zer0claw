@@ -7,17 +7,17 @@
 
 Welcome to the **Zero-Trust Solana Tax Accounting Payment Terminal**. This repository is a submission for the Superteam ZeroClaw Hackathon Bounty. 
 
-It provides production-ready, `wasm32-wasip2` plugins for the ZeroClaw runtime, turning any WhatsApp, Telegram, or Terminal agent into a fully autonomous, hyper-secure payment processor with dual-currency (BRL/USD) IRS tax reporting.
+This repository provides `wasm32-wasip2` plugins for the ZeroClaw runtime, turning a standard WhatsApp, Telegram, or Terminal agent into a Tier-1 secure payment processor with dual-currency (BRL/USD) IRS tax reporting.
 
 ## 🏆 The Superteam Submission 
-**Judges:** Please read our official [SUBMISSION.md](./SUBMISSION.md) for the complete breakdown of how this architecture flawlessly addresses every single rubric requirement, including the **Brazil-First Flow** and **Blockhash Expiry Trap**.
+**Judges:** See [SUBMISSION.md](./SUBMISSION.md) for a technical breakdown of how this architecture meets the rubric requirements, including the **Brazil-First Flow** and resolving the **Blockhash Expiry** issue.
 
 ---
 
 ## ⚡ What it Does
-When a customer interacts with the merchant's ZeroClaw agent (e.g., via WhatsApp), the agent can generate Zero-Key Solana Transactions. Before any transaction is proposed, the WASM Risk Engine dynamically queries the Solana blockchain to assess the token for Mint/Freeze Authority risks. 
+When a customer interacts with the merchant's ZeroClaw agent (e.g., via WhatsApp), the agent generates Zero-Key Solana Transactions. Before any transaction is proposed, the WASM Risk Engine dynamically queries the Solana RPC to assess the token for Mint/Freeze Authority risks. 
 
-If it passes, the agent outputs a **Solana Pay URI** for the user to scan and approve with their Phantom mobile wallet (Tier 1 Proposer Custody - Zero Keys). Once settled, the plugin securely queries CoinGecko and automatically logs the transaction's cost-basis in both **USD** and **BRL (Brazilian Real)** to an immutable flat-file ledger for tax reporting.
+If the token is safe, the agent outputs a **Solana Pay URI**. The user scans and approves it with their Phantom mobile wallet (Tier 1 Proposer Custody - Zero Keys). Post-settlement, the plugin queries CoinGecko and automatically logs the transaction's cost-basis in both **USD** and **BRL (Brazilian Real)** to a local flat-file ledger for tax reporting.
 
 ## 🚀 One-Click Enterprise Deployment
 We have built cross-platform deployment scripts to instantly spin up the plugins.

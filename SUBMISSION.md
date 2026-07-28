@@ -7,7 +7,7 @@ This submission introduces the first **Fail-Closed Risk Engine** and **Automated
 
 When a user or customer interacts with the local agent (e.g., via WhatsApp or Terminal), the agent can generate Zero-Key Unsigned Solana Transactions for payments or token transfers. Before *any* transaction is generated, our WASM Risk Engine dynamically queries the Solana blockchain via `wasi:http` (waki) to assess the token for Mint Authority, Freeze Authority, and Supply Concentration risks. 
 
-If the transaction passes risk checks, it builds a **Solana Pay Transaction URL** (solving the Blockhash Expiry trap natively). The user simply clicks the link or scans the QR code with their mobile Phantom wallet to approve it. Once approved, the transaction is settled, and the exact USD and BRL (Brazilian Real) cost-basis at the time of execution is queried via CoinGecko and logged securely via our Accounting plugin for immediate dual-accounting IRS and Receita Federal tax reporting.
+If the transaction passes risk checks, it builds a **Solana Pay Transaction URL** (bypassing the Blockhash Expiry issue natively). The user clicks the link or scans the QR code with their Phantom wallet to approve it. Post-approval, the transaction is settled, and the exact USD and BRL (Brazilian Real) cost-basis is queried via CoinGecko and logged via the Accounting plugin for dual-accounting tax reporting.
 
 ## 2. Who it's For
 - Family shops or freelancers who want a fully self-hosted, end-to-end payment processor running on a $40 Raspberry Pi, ensuring they own the infrastructure.
@@ -16,7 +16,7 @@ If the transaction passes risk checks, it builds a **Solana Pay Transaction URL*
 
 ## 3. Which ZeroClaw Features it Uses
 - **Tier 3 WebAssembly Plugins:** We built two clean, modular `wasm32-wasip2` compatible core crates (`zeroclaw-solana` and `zeroclaw-accounting`) that export pure-Rust fail-closed transaction generation logic directly to the ZeroClaw host using `wit/v0`.
-- **WAKI (wasi:http):** Outbound RPC requests for live on-chain token evaluation and USD price feeds operate flawlessly within the WASM sandbox via `waki` and JSON-RPC.
+- **WAKI (wasi:http):** Outbound RPC requests for live on-chain token evaluation and USD price feeds operate within the WASM sandbox via `waki` and JSON-RPC.
 - **SOP Approval Checkpoints (Hardware Wallet Interceptor):** Human-in-the-loop validation ensures the LLM acts purely as a proposer. A physical human must approve the transaction before it is sent to the network.
 
 ## 4. Custody Tier & Threat Model
