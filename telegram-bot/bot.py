@@ -59,8 +59,9 @@ CATALOG = {
 async def fn_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handler for /start command."""
     welcome_text = (
-        "🛡️ <b>Welcome to ZeroClaw Commerce Terminal</b>\n\n"
-        "I am an autonomous, zero-key payment & digital fulfillment agent.\n"
+        "🛡️ <b>Welcome to ZeroClaw Commerce Demo Storefront</b>\n"
+        "<i>(Template Storefront — Replace with your own digital goods or services)</i>\n\n"
+        "I am an autonomous, zero-key payment & digital fulfillment cashier.\n"
         "All transactions are secured via <b>Tier 1 Solana Pay</b> (zero private key risk).\n\n"
         "<b>Available Commands:</b>\n"
         "/catalog - View digital products for sale\n"
@@ -73,7 +74,10 @@ async def fn_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def fn_catalog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handler for /catalog command."""
-    text = "📦 <b>ZeroClaw Commerce Product Catalog:</b>\n\n"
+    text = (
+        "📦 <b>ZeroClaw Commerce Demo Storefront Catalog:</b>\n"
+        "<i>(Template Storefront — Replace with your own digital goods or services)</i>\n\n"
+    )
     for sku, item in CATALOG.items():
         symbol = "USDC" if item["crypto_symbol"] == "usd-coin" else "SOL"
         text += (
