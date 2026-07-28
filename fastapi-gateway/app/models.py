@@ -2,6 +2,7 @@
 
 from enum import Enum
 from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -18,11 +19,42 @@ class CryptoSymbol(str, Enum):
 
 
 class InvoiceCreateRequest(BaseModel):
-    merchant_wallet: str = Field(..., description="Destination Solana wallet address")
-    amount_crypto: float = Field(..., gt=0, description="Amount of crypto to request")
-    crypto_symbol: CryptoSymbol = Field(CryptoSymbol.USDC, description="Cryptocurrency identifier")
-    semantic_intent: str = Field(..., description="Human-readable reason for the payment (Semantic Receipt)")
-    max_spend_policy: Optional[float] = Field(None, description="Optional Policy-as-Code spend limit")
+    merchant_wallet: str = Field(
+        ...,
+        description="Destination Solana wallet address",
+        min_length=32,
+        max_length=64,
+    )
+    amount_crypto: float = Field(
+        ...,
+        gt=0,
+        description="Amount of crypto to request",
+    )
+    crypto_symbol: CryptoSymbol = Field(
+        CryptoSymbol.USDC,
+        description="Cryptocurrency identifier",
+    )
+    semantic_intent: str = Field(
+        ...,
+        description="Human-readable reason for the payment (Semantic Receipt)",
+        min_length=3,
+    )
+    max_spend_policy: Optional[float] = Field(
+        None,
+        description="Optional Policy-as-Code spend limit",
+    )
+    confirmations_required: int = Field(
+        1,
+        ge=1,
+        le=32,
+        description="Minimum confirmation depth required for settlement.",
+    )
+    expires_in_seconds: int = Field(
+        900,
+        ge=60,
+        le=86400,
+        description="Invoice expiration window in seconds (default 15 minutes).",
+    )
 
 
 class InvoiceResponse(BaseModel):
@@ -33,15 +65,41 @@ class InvoiceResponse(BaseModel):
     crypto_symbol: str
     merchant_wallet: str
     semantic_intent: str
+    reference: str
+    expires_at: int
+    invoice_hash: str
+    confirmations_required: int
 
 
 class PaymentVerifyRequest(BaseModel):
-    invoice_id: str = Field(..., description="Unique invoice ID")
-    signature: str = Field(..., description="Solana transaction signature")
-    merchant_wallet: str = Field(..., description="Merchant wallet address")
-    amount_crypto: float = Field(..., gt=0, description="Expected crypto amount")
-    crypto_symbol: CryptoSymbol = Field(CryptoSymbol.USDC, description="Crypto symbol")
-    tax_category: TaxCategory = Field(TaxCategory.SERVICE_REVENUE, description="IRS Tax Category")
+    invoice_id: str = Field(
+        ...,
+        description="Unique invoice ID",
+    )
+    signature: str = Field(
+        ...,
+        description="Solana transaction signature",
+        min_length=32,
+    )
+    merchant_wallet: str = Field(
+        ...,
+        description="Merchant wallet address",
+        min_length=32,
+        max_length=64,
+    )
+    amount_crypto: float = Field(
+        ...,
+        gt=0,
+        description="Expected crypto amount",
+    )
+    crypto_symbol: CryptoSymbol = Field(
+        CryptoSymbol.USDC,
+        description="Crypto symbol",
+    )
+    tax_category: TaxCategory = Field(
+        TaxCategory.SERVICE_REVENUE,
+        description="IRS Tax Category",
+    )
 
 
 class PaymentVerifyResponse(BaseModel):
@@ -52,14 +110,28 @@ class PaymentVerifyResponse(BaseModel):
     amount_brl: float
     tax_category: str
     receipt_signature: str
+    invoice_hash: str
+    reference: str
     message: str
 
 
 class DigitalFulfillmentRequest(BaseModel):
-    invoice_id: str = Field(..., description="Invoice ID of confirmed payment")
-    customer_id: str = Field(..., description="Telegram/WhatsApp/Discord user ID")
-    channel: str = Field(..., description="Communication channel name (e.g. telegram)")
-    digital_item_sku: str = Field(..., description="SKU or product key of the digital asset")
+    invoice_id: str = Field(
+        ...,
+        description="Invoice ID of confirmed payment",
+    )
+    customer_id: str = Field(
+        ...,
+        description="Telegram/WhatsApp/Discord user ID",
+    )
+    channel: str = Field(
+        ...,
+        description="Communication channel name (e.g. telegram, whatsapp, discord)",
+    )
+    digital_item_sku: str = Field(
+        ...,
+        description="SKU or product key of the digital asset",
+    )
 
 
 class DigitalFulfillmentResponse(BaseModel):

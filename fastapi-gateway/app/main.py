@@ -1,11 +1,12 @@
-"""Solona Commerce FastAPI Gateway Application."""
-
 import hashlib
 import logging
 import time
 import uuid
+from typing import Any, Dict, Set
+
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.models import (
     DigitalFulfillmentRequest,
     DigitalFulfillmentResponse,
@@ -17,13 +18,17 @@ from app.models import (
 )
 from app.solana import SolanaCommerceClient
 
+# Structured logging baseline
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("solona-commerce")
 
 app = FastAPI(
     title="Solona Commerce Gateway API",
-    description="Production-ready FastAPI gateway for Zero-Trust Solana Pay payments, tax accounting, and digital fulfillment.",
-    version="1.0.0",
+    description=(
+        "Production-ready FastAPI gateway for Zero-Trust Solana Pay payments, "
+        "dual-currency tax accounting, and digital fulfillment."
+    ),
+    version="1.1.0",
 )
 
 app.add_middleware(
@@ -36,14 +41,19 @@ app.add_middleware(
 
 solana_client = SolanaCommerceClient()
 
-# In-memory store for invoices and receipts (for demo/gateway integration)
-INVOICE_STORE = {}
+# In-memory stores (demo / gateway integration)
+INVOICE_STORE: Dict[str, Dict[str, Any]] = {}
+VERIFIED_SIGNATURES: Set[str] = set()
 
 
 @app.get("/health", tags=["Health"])
 async def health_check():
     """Health check endpoint."""
-    return {"status": "ok", "service": "solona-commerce-gateway", "timestamp": int(time.time())}
+    return {
+        "status": "ok",
+        "service": "solona-commerce-gateway",
+        "timestamp": int(time.time()),
+    }
 
 
 @app.post(
@@ -54,17 +64,47 @@ async def health_check():
     tags=["Invoices"],
 )
 async def create_invoice(request: InvoiceCreateRequest):
-    """Creates a Zero-Key Solana Pay invoice with Semantic Receipts and Policy-as-Code limits."""
+    """
+    Creates a Zero-Key Solana Pay invoice with Semantic Receipts,
+    Policy-as-Code limits, references, and expiration.
+    """
     try:
         # Policy-as-Code enforcement
         if request.max_spend_policy and request.amount_crypto > request.max_spend_policy:
+            detail = (
+                f"CriticalRisk: Policy Violation. Requested amount {request.amount_crypto} "
+                f"exceeds MAX_SPEND limit of {request.max_spend_policy}"
+            )
+            logger.warning(
+                {
+                    "event": "policy_violation",
+                    "amount_crypto": request.amount_crypto,
+                    "max_spend_policy": request.max_spend_policy,
+                    "detail": detail,
+                }
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"CriticalRisk: Policy Violation. Requested amount {request.amount_crypto} exceeds MAX_SPEND limit of {request.max_spend_policy}",
+                detail=detail,
             )
 
         invoice_id = f"inv_{uuid.uuid4().hex[:12]}"
-        solana_pay_url = solana_client.build_solana_pay_url(request)
+        reference = uuid.uuid4().hex
+        created_at = int(time.time())
+        expires_at = created_at + request.expires_in_seconds
+
+        # Invoice hash for semantic receipts and replay protection
+        invoice_payload = (
+            f"{request.merchant_wallet}:{request.amount_crypto}:"
+            f"{request.crypto_symbol.value}:{request.semantic_intent}:{created_at}:{reference}"
+        )
+        invoice_hash = hashlib.sha256(invoice_payload.encode()).hexdigest()
+
+        solana_pay_url = solana_client.build_solana_pay_url(
+            request=request,
+            reference=reference,
+            invoice_hash=invoice_hash,
+        )
 
         invoice_data = {
             "invoice_id": invoice_id,
@@ -73,12 +113,28 @@ async def create_invoice(request: InvoiceCreateRequest):
             "crypto_symbol": request.crypto_symbol.value,
             "semantic_intent": request.semantic_intent,
             "solana_pay_url": solana_pay_url,
-            "created_at": int(time.time()),
+            "created_at": created_at,
+            "expires_at": expires_at,
             "status": "pending",
+            "reference": reference,
+            "invoice_hash": invoice_hash,
+            "confirmations_required": request.confirmations_required,
         }
 
         INVOICE_STORE[invoice_id] = invoice_data
-        logger.info(f"Created Invoice {invoice_id} for {request.amount_crypto} {request.crypto_symbol.value}")
+
+        logger.info(
+            {
+                "event": "invoice_created",
+                "invoice_id": invoice_id,
+                "merchant_wallet": request.merchant_wallet,
+                "amount_crypto": request.amount_crypto,
+                "crypto_symbol": request.crypto_symbol.value,
+                "semantic_intent": request.semantic_intent,
+                "reference": reference,
+                "expires_at": expires_at,
+            }
+        )
 
         return InvoiceResponse(
             success=True,
@@ -88,12 +144,24 @@ async def create_invoice(request: InvoiceCreateRequest):
             crypto_symbol=request.crypto_symbol.value,
             merchant_wallet=request.merchant_wallet,
             semantic_intent=request.semantic_intent,
+            reference=reference,
+            expires_at=expires_at,
+            invoice_hash=invoice_hash,
+            confirmations_required=request.confirmations_required,
         )
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error creating invoice: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        logger.error(
+            {
+                "event": "invoice_create_error",
+                "error": str(e),
+            }
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal error creating invoice",
+        )
 
 
 @app.post(
@@ -103,33 +171,110 @@ async def create_invoice(request: InvoiceCreateRequest):
     tags=["Payments"],
 )
 async def verify_payment(request: PaymentVerifyRequest):
-    """Verifies on-chain settlement for an invoice and logs dual-currency tax accounting."""
+    """
+    Verifies on-chain settlement for an invoice, enforces replay protection,
+    runs dual-currency tax accounting, and logs a semantic cryptographic receipt.
+    """
     try:
-        # Verify transaction on-chain via Solana RPC
-        confirmed = await solana_client.verify_signature_on_chain(request.signature)
+        invoice = INVOICE_STORE.get(request.invoice_id)
+        if not invoice:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Invoice not found",
+            )
+
+        # Basic consistency checks
+        if invoice["merchant_wallet"] != request.merchant_wallet:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Merchant wallet mismatch for invoice",
+            )
+
+        if invoice["amount_crypto"] != request.amount_crypto:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Amount mismatch for invoice",
+            )
+
+        if invoice["crypto_symbol"] != request.crypto_symbol.value:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Crypto symbol mismatch for invoice",
+            )
+
+        # Expiration check
+        now_ts = int(time.time())
+        if now_ts > invoice["expires_at"]:
+            logger.warning(
+                {
+                    "event": "invoice_expired",
+                    "invoice_id": request.invoice_id,
+                    "expires_at": invoice["expires_at"],
+                    "now": now_ts,
+                }
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invoice has expired",
+            )
+
+        # Replay protection
+        if request.signature in VERIFIED_SIGNATURES:
+            logger.warning(
+                {
+                    "event": "replay_attempt",
+                    "signature": request.signature,
+                    "invoice_id": request.invoice_id,
+                }
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Signature already used for a verified payment",
+            )
+
+        # On-chain verification with confirmation depth
+        confirmed = await solana_client.verify_signature_on_chain(
+            signature=request.signature,
+            min_confirmations=invoice["confirmations_required"],
+        )
         if not confirmed:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Transaction signature not confirmed on Solana blockchain",
             )
 
-        # Query CoinGecko for live USD and BRL cost-basis
-        price_usd, price_brl = await solana_client.fetch_fiat_prices(request.crypto_symbol)
+        # Fiat pricing
+        price_usd, price_brl = await solana_client.fetch_fiat_prices(
+            request.crypto_symbol
+        )
         total_usd = request.amount_crypto * price_usd
         total_brl = request.amount_crypto * price_brl
 
-        # Generate cryptographic receipt signature (Ed25519 surrogate digest)
-        receipt_payload = f"{request.invoice_id}:{request.signature}:{total_usd:.2f}:{total_brl:.2f}"
+        # Cryptographic receipt signature (semantic + financial)
+        receipt_payload = (
+            f"{request.invoice_id}:{request.signature}:"
+            f"{total_usd:.2f}:{total_brl:.2f}:{invoice['invoice_hash']}"
+        )
         receipt_signature = hashlib.sha256(receipt_payload.encode()).hexdigest()
 
-        # Update stored invoice status
-        if request.invoice_id in INVOICE_STORE:
-            INVOICE_STORE[request.invoice_id]["status"] = "paid"
-            INVOICE_STORE[request.invoice_id]["signature"] = request.signature
+        # Mark invoice as paid and record signature
+        invoice["status"] = "paid"
+        invoice["signature"] = request.signature
+        invoice["paid_at"] = now_ts
+
+        VERIFIED_SIGNATURES.add(request.signature)
 
         logger.info(
-            f"Verified Payment {request.signature} for Invoice {request.invoice_id}. "
-            f"Logged ${total_usd:.2f} USD | R${total_brl:.2f} BRL"
+            {
+                "event": "payment_verified",
+                "invoice_id": request.invoice_id,
+                "signature": request.signature,
+                "amount_crypto": request.amount_crypto,
+                "amount_usd": round(total_usd, 2),
+                "amount_brl": round(total_brl, 2),
+                "tax_category": request.tax_category.value,
+                "invoice_hash": invoice["invoice_hash"],
+            }
         )
 
         return PaymentVerifyResponse(
@@ -140,13 +285,27 @@ async def verify_payment(request: PaymentVerifyRequest):
             amount_brl=round(total_brl, 2),
             tax_category=request.tax_category.value,
             receipt_signature=receipt_signature,
-            message=f"Payment verified and recorded to dual IRS/Receita Federal tax ledger (${total_usd:.2f} USD | R${total_brl:.2f} BRL).",
+            invoice_hash=invoice["invoice_hash"],
+            reference=invoice["reference"],
+            message=(
+                f"Payment verified and recorded to dual IRS/Receita Federal tax ledger "
+                f"(${total_usd:.2f} USD | R${total_brl:.2f} BRL)."
+            ),
         )
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error verifying payment: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        logger.error(
+            {
+                "event": "payment_verify_error",
+                "error": str(e),
+                "invoice_id": request.invoice_id,
+            }
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal error verifying payment",
+        )
 
 
 @app.post(
@@ -156,14 +315,43 @@ async def verify_payment(request: PaymentVerifyRequest):
     tags=["Fulfillment"],
 )
 async def deliver_digital_goods(request: DigitalFulfillmentRequest):
-    """Delivers a digital asset/license token to a customer across Telegram/WhatsApp/Discord."""
+    """
+    Delivers a digital asset/license token to a customer across Telegram/WhatsApp/Discord,
+    only if the associated invoice is paid.
+    """
     try:
+        invoice = INVOICE_STORE.get(request.invoice_id)
+        if not invoice:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invoice not found for fulfillment",
+            )
+
+        if invoice.get("status") != "paid":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invoice is not marked as paid; fulfillment blocked",
+            )
+
         # Generate secure fulfillment token
-        token_payload = f"{request.customer_id}:{request.digital_item_sku}:{time.time()}"
-        fulfillment_token = f"SOLONA_DELIVERY_{hashlib.sha256(token_payload.encode()).hexdigest()[:24].upper()}"
+        token_payload = (
+            f"{request.customer_id}:{request.digital_item_sku}:{time.time()}:"
+            f"{invoice.get('invoice_hash', '')}"
+        )
+        fulfillment_token = (
+            f"SOLONA_DELIVERY_"
+            f"{hashlib.sha256(token_payload.encode()).hexdigest()[:24].upper()}"
+        )
 
         logger.info(
-            f"Delivered SKU {request.digital_item_sku} to User {request.customer_id} via {request.channel}"
+            {
+                "event": "digital_fulfillment",
+                "invoice_id": request.invoice_id,
+                "customer_id": request.customer_id,
+                "channel": request.channel,
+                "digital_item_sku": request.digital_item_sku,
+                "fulfillment_token": fulfillment_token,
+            }
         )
 
         return DigitalFulfillmentResponse(
@@ -174,6 +362,17 @@ async def deliver_digital_goods(request: DigitalFulfillmentRequest):
             fulfillment_token=fulfillment_token,
             delivered_at=int(time.time()),
         )
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error executing fulfillment: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        logger.error(
+            {
+                "event": "fulfillment_error",
+                "error": str(e),
+                "invoice_id": request.invoice_id,
+            }
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal error executing fulfillment",
+        )
