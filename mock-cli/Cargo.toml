@@ -1,0 +1,13 @@
+[package]
+name = "mock-cli"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+zeroclaw-api = { path = "../zeroclaw-api" }
+zeroclaw-solana = { path = "../zeroclaw-solana" }
+zeroclaw-accounting = { path = "../zeroclaw-accounting" }
+serde_json = "1.0"
+
+[lints]
+workspace = true

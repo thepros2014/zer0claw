@@ -4,6 +4,7 @@ members = [
     "zeroclaw-solana",
     "zeroclaw-memory",
     "zeroclaw-accounting",
+    "mock-cli",
 ]
 resolver = "2"
 
