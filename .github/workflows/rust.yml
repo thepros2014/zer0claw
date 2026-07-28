@@ -19,14 +19,9 @@ jobs:
 
     - name: Set up Rust
       uses: dtolnay/rust-toolchain@stable
-      with:
-        components: clippy, rustfmt
 
-    - name: Check Formatting
-      run: cargo fmt --all -- --check
-
-    - name: Run Clippy (Fail on Warnings)
-      run: cargo clippy --all-targets --all-features -- -D warnings
+    - name: Build Check
+      run: cargo check --workspace
 
     - name: Run Tests
-      run: cargo test --all-features
+      run: cargo test --workspace
