@@ -163,7 +163,11 @@ async def fn_buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_text(f"❌ Failed to create invoice: {err_detail}")
         except Exception as e:
             logger.error(f"Error contacting gateway: {e}")
-            await update.message.reply_text("❌ Error contacting ZeroClaw Commerce Gateway.")
+            await update.message.reply_text(
+                "❌ Error contacting ZeroClaw Commerce Gateway.\n"
+                "Please ensure the Gateway server is running: <code>uvicorn app.main:app --port 8000</code>",
+                parse_mode=ParseMode.HTML,
+            )
 
 
 async def fn_verify(update: Update, context: ContextTypes.DEFAULT_TYPE):
