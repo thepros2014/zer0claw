@@ -1,5 +1,5 @@
 """
-Solona Commerce Telegram Bot.
+ZeroClaw Commerce Telegram Bot.
 Production-ready async Telegram bot connecting users to the FastAPI Gateway for
 zero-key Solana Pay invoices, tax logging, and digital goods delivery.
 """
@@ -33,10 +33,10 @@ logger = logging.getLogger("solona-telegram-bot")
 # Digital Product Catalog
 CATALOG = {
     "SKU_PRO_KEY": {
-        "name": "Solona Pro License Key",
+        "name": "ZeroClaw Pro License Key",
         "amount_crypto": 50.0,
         "crypto_symbol": "usd-coin",
-        "description": "Lifetime access to Solona Commerce Pro API Gateway.",
+        "description": "Lifetime access to ZeroClaw Commerce Pro API Gateway.",
         "max_spend_policy": 100.0,
     },
     "SKU_VIP_SUB": {
@@ -59,7 +59,7 @@ CATALOG = {
 async def fn_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handler for /start command."""
     welcome_text = (
-        "🛡️ <b>Welcome to Solona Commerce Terminal</b>\n\n"
+        "🛡️ <b>Welcome to ZeroClaw Commerce Terminal</b>\n\n"
         "I am an autonomous, zero-key payment & digital fulfillment agent.\n"
         "All transactions are secured via <b>Tier 1 Solana Pay</b> (zero private key risk).\n\n"
         "<b>Available Commands:</b>\n"
@@ -73,7 +73,7 @@ async def fn_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def fn_catalog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handler for /catalog command."""
-    text = "📦 <b>Solona Commerce Product Catalog:</b>\n\n"
+    text = "📦 <b>ZeroClaw Commerce Product Catalog:</b>\n\n"
     for sku, item in CATALOG.items():
         symbol = "USDC" if item["crypto_symbol"] == "usd-coin" else "SOL"
         text += (
@@ -159,7 +159,7 @@ async def fn_buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_text(f"❌ Failed to create invoice: {err_detail}")
         except Exception as e:
             logger.error(f"Error contacting gateway: {e}")
-            await update.message.reply_text("❌ Error contacting Solona Commerce Gateway.")
+            await update.message.reply_text("❌ Error contacting ZeroClaw Commerce Gateway.")
 
 
 async def fn_verify(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -228,7 +228,7 @@ async def fn_verify(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def fn_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handler for /help command."""
     help_text = (
-        "🔒 <b>Solona Commerce Security Architecture</b>\n\n"
+        "🔒 <b>ZeroClaw Commerce Security Architecture</b>\n\n"
         "• <b>Tier 1 Zero-Key Custody:</b> The bot and agent never touch private keys.\n"
         "• <b>Policy-as-Code:</b> Spending limits are enforced inside the WASM sandbox.\n"
         "• <b>Semantic Receipts:</b> Payment intent is embedded into Solana Pay URIs.\n"
@@ -252,7 +252,7 @@ def main():
     app.add_handler(CommandHandler("verify", fn_verify))
     app.add_handler(CommandHandler("help", fn_help))
 
-    logger.info("Solona Commerce Telegram Bot is running...")
+    logger.info("ZeroClaw Commerce Telegram Bot is running...")
     app.run_polling()
 
 
