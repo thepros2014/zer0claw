@@ -78,16 +78,29 @@ async def serve_setup_wizard():
     return {"message": "Setup Wizard unavailable"}
 
 
+def mask_secret(val: Any) -> str:
+    """Masks sensitive credentials for clean terminal logging."""
+    if not val or not isinstance(val, str):
+        return "[HIDDEN]"
+    if len(val) <= 6:
+        return "******"
+    return f"{val[:3]}...{val[-3:]}"
+
+
 @app.post("/api/v1/setup/save", tags=["Setup"])
 async def save_merchant_setup(config: Dict[str, Any]):
-    """Saves merchant setup configuration and initializes environment."""
-    logger.info({"event": "merchant_setup_saved", "config": config})
+    """Saves merchant setup configuration and initializes environment safely without logging raw secrets."""
+    sanitized_config = {
+        k: (mask_secret(v) if any(s in k.lower() for s in ["token", "pin", "key", "secret"]) else v)
+        for k, v in config.items()
+    }
+    logger.info({"event": "merchant_setup_saved", "config": sanitized_config})
     return {"status": "success", "message": "Merchant configuration saved successfully!"}
 
 
 @app.post("/api/v1/auth/verify-pin", tags=["Auth"])
 async def verify_admin_pin(payload: Dict[str, Any]):
-    """Verifies the 6-Digit Admin Security PIN for privileged operations."""
+    """Verifies the 6-Digit Admin Security PIN without logging raw credentials."""
     pin = payload.get("pin", "")
     # Default Admin PIN is 123456
     is_valid = (pin == "123456")

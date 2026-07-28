@@ -269,7 +269,8 @@ def main():
     app.add_handler(CommandHandler("verify", fn_verify))
     app.add_handler(CommandHandler("help", fn_help))
 
-    logger.info("ZeroClaw Commerce Telegram Bot is running...")
+    masked_token = f"{TELEGRAM_BOT_TOKEN[:3]}...{TELEGRAM_BOT_TOKEN[-3:]}" if len(TELEGRAM_BOT_TOKEN) > 6 else "******"
+    logger.info(f"ZeroClaw Commerce Telegram Bot is running with token [{masked_token}]...")
     app.run_polling()
 
 
