@@ -30,28 +30,28 @@ logging.basicConfig(
 )
 logger = logging.getLogger("solona-telegram-bot")
 
-# Digital Product Catalog
+# Digital Product Catalog (Merchant Sample Inventory)
 CATALOG = {
-    "SKU_PRO_KEY": {
-        "name": "ZeroClaw Pro License Key",
-        "amount_crypto": 50.0,
+    "SKU_EBOOK_PDF": {
+        "name": "Mastering Solana Dev (eBook PDF)",
+        "amount_crypto": 25.0,
         "crypto_symbol": "usd-coin",
-        "description": "Lifetime access to ZeroClaw Commerce Pro API Gateway.",
+        "description": "Comprehensive guide to building high-throughput Solana dApps.",
+        "max_spend_policy": 50.0,
+    },
+    "SKU_SAAS_KEY": {
+        "name": "Merchant API License Key",
+        "amount_crypto": 49.0,
+        "crypto_symbol": "usd-coin",
+        "description": "Access key for 10,000 monthly API calls.",
         "max_spend_policy": 100.0,
     },
-    "SKU_VIP_SUB": {
-        "name": "VIP Trading Channel Pass",
-        "amount_crypto": 150.0,
-        "crypto_symbol": "usd-coin",
-        "description": "30-day pass to high-yield alpha signals.",
-        "max_spend_policy": 200.0,
-    },
-    "SKU_DEV_DONATE": {
-        "name": "Dev Supporter Coffee",
+    "SKU_COMMUNITY_PASS": {
+        "name": "VIP Mastermind Access Pass",
         "amount_crypto": 0.5,
         "crypto_symbol": "solana",
-        "description": "Support open-source development on Solana.",
-        "max_spend_policy": 10.0,
+        "description": "Exclusive 30-day Discord access token.",
+        "max_spend_policy": 2.0,
     },
 }
 
