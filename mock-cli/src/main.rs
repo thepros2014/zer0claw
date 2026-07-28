@@ -13,7 +13,7 @@ fn main() {
     println!("============================================================");
     
     let ctx = ToolContext {
-        identity_key_bytes: b"mock_tier1_key".to_vec(),
+        identity_key_bytes: b"mock_tier1_key_00000000000000000".to_vec(),
     };
 
     let solana_tool = SolanaTransferTool::new();
@@ -46,7 +46,9 @@ fn main() {
             
             let args = json!({
                 "destination_address": "DestWallet11111111111111111111111111111111",
-                "amount": 50.0
+                "amount": 50.0,
+                "semantic_intent": "Paying vendor for software services",
+                "security_policy": "MAX_SPEND=100"
             });
             
             let result = solana_tool.execute(args, &ctx);

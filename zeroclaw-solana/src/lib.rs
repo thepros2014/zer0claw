@@ -198,6 +198,14 @@ impl Tool for SolanaTransferTool {
                 "amount": {
                     "type": "number",
                     "description": "The amount of tokens to send."
+                },
+                "semantic_intent": {
+                    "type": "string",
+                    "description": "Optional explanation of why this transaction is being generated (Semantic Receipt)."
+                },
+                "security_policy": {
+                    "type": "string",
+                    "description": "Optional Policy-as-Code string evaluated before generating the transaction (e.g. MAX_SPEND=100)."
                 }
             },
             "required": ["destination_address", "amount"]
@@ -246,7 +254,41 @@ impl Tool for SolanaTransferTool {
             }
         };
 
-        let solana_pay_url = format!("solana:{}?amount={}", destination, amount);
+        // --- POLICY-AS-CODE ENGINE ---
+        if let Some(policy) = args.get("security_policy").and_then(|v| v.as_str()) {
+            // Very simple DSL evaluator: parses "MAX_SPEND=<number>"
+            if policy.starts_with("MAX_SPEND=") {
+                if let Ok(max_spend) = policy["MAX_SPEND=".len()..].parse::<f64>() {
+                    if amount > max_spend {
+                        let error_msg = format!(
+                            "CriticalRisk: Policy Violation. Requested amount {} exceeds MAX_SPEND policy of {}",
+                            amount, max_spend
+                        );
+                        return ToolResult {
+                            success: false,
+                            output: String::new(),
+                            error: Some(error_msg.clone()),
+                            receipt: Some(CryptographicReceipt::generate(
+                                &ctx.identity_key_bytes,
+                                self.name(),
+                                &args,
+                                false,
+                                "",
+                                Some(&error_msg),
+                            )),
+                        };
+                    }
+                }
+            }
+        }
+
+        // --- SEMANTIC RECEIPTS ---
+        let mut solana_pay_url = format!("solana:{}?amount={}", destination, amount);
+        
+        if let Some(intent) = args.get("semantic_intent").and_then(|v| v.as_str()) {
+            let encoded_intent = urlencoding::encode(intent);
+            solana_pay_url.push_str(&format!("&message={}", encoded_intent));
+        }
 
         let output = format!(
             "Solana Pay Transaction URL generated: {}. Please click the link or scan it with your wallet app (like Phantom) to approve and broadcast the payment.",
@@ -277,7 +319,7 @@ mod tests {
 
     fn dummy_ctx() -> ToolContext {
         ToolContext {
-            identity_key_bytes: b"test_key_12345".to_vec(),
+            identity_key_bytes: b"test_key_12345678901234567890123".to_vec(),
         }
     }
 
@@ -338,5 +380,37 @@ mod tests {
         );
         assert!(result.success);
         assert!(result.output.contains("solana:DestWallet11111111111111111111111111111111?amount=50.5"));
+    }
+
+    #[test]
+    fn test_transfer_policy_violation_fail_closed() {
+        let tool = SolanaTransferTool::new();
+        let ctx = dummy_ctx();
+        let result = tool.execute(
+            json!({
+                "destination_address": "DestWallet",
+                "amount": 1000.0,
+                "security_policy": "MAX_SPEND=500"
+            }),
+            &ctx,
+        );
+        assert!(!result.success);
+        assert!(result.error.unwrap().contains("Policy Violation"));
+    }
+
+    #[test]
+    fn test_transfer_semantic_receipt() {
+        let tool = SolanaTransferTool::new();
+        let ctx = dummy_ctx();
+        let result = tool.execute(
+            json!({
+                "destination_address": "DestWallet",
+                "amount": 50.0,
+                "semantic_intent": "Paying vendor for services"
+            }),
+            &ctx,
+        );
+        assert!(result.success);
+        assert!(result.output.contains("&message=Paying%20vendor%20for%20services"));
     }
 }
