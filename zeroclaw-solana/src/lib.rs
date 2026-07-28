@@ -260,8 +260,8 @@ impl Tool for SolanaTransferTool {
         // --- POLICY-AS-CODE ENGINE ---
         if let Some(policy) = args.get("security_policy").and_then(|v| v.as_str()) {
             // Very simple DSL evaluator: parses "MAX_SPEND=<number>"
-            if policy.starts_with("MAX_SPEND=") {
-                if let Ok(max_spend) = policy["MAX_SPEND=".len()..].parse::<f64>() {
+            if let Some(stripped) = policy.strip_prefix("MAX_SPEND=") {
+                if let Ok(max_spend) = stripped.parse::<f64>() {
                     if amount > max_spend {
                         let error_msg = format!(
                             "CriticalRisk: Policy Violation. Requested amount {} exceeds MAX_SPEND policy of {}",

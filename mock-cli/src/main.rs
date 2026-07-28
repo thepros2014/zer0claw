@@ -1,3 +1,5 @@
+//! Mock CLI binary crate for ZeroClaw Tier 1 interactive demo.
+
 use serde_json::json;
 use std::io::{self, Write};
 use std::thread;
@@ -21,10 +23,12 @@ fn main() {
 
     loop {
         print!("\n> ");
-        io::stdout().flush().unwrap();
+        let _ = io::stdout().flush();
 
         let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
+        if io::stdin().read_line(&mut input).is_err() {
+            break;
+        }
         let input = input.trim();
 
         if input.is_empty() {
@@ -56,7 +60,7 @@ fn main() {
             let result = solana_tool.execute(args, &ctx);
             println!("{}\n", result.output);
 
-            thread::sleep(Duration::from_millis(2000));
+            thread::sleep(Duration::from_secs(2));
             println!("\n[Network Check: Transaction Confirmed]");
             println!("Agent: On-chain settlement confirmed. Processing dual-currency tax logic...");
 

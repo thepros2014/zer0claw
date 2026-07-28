@@ -153,7 +153,7 @@ impl Tool for ProcessPaymentTool {
             .append(true)
             .open(&self.db_path)
         {
-            let _ = writeln!(file, "{}", record.to_string());
+            let _ = writeln!(file, "{}", record);
         }
 
         ToolResult {
@@ -233,7 +233,7 @@ impl Tool for GenerateTaxReportTool {
             Err(_) => return self.fail("Could not create CSV file".to_string(), &args, ctx),
         };
 
-        let _ = wtr.write_record(&[
+        let _ = wtr.write_record([
             "Timestamp",
             "Wallet Address",
             "Amount (USD)",
@@ -248,7 +248,7 @@ impl Tool for GenerateTaxReportTool {
 
         if let Ok(file) = std::fs::File::open(&self.db_path) {
             let reader = BufReader::new(file);
-            for line in reader.lines().flatten() {
+            for line in reader.lines().map_while(Result::ok) {
                 if let Ok(record) = serde_json::from_str::<Value>(&line) {
                     // Simple parsing for the slice
                     let ts = record["timestamp"].as_u64().unwrap_or(0);
@@ -261,7 +261,7 @@ impl Tool for GenerateTaxReportTool {
                     total_revenue_usd += amount_usd;
                     total_revenue_brl += amount_brl;
                     count += 1;
-                    let _ = wtr.write_record(&[
+                    let _ = wtr.write_record([
                         ts.to_string(),
                         wallet.to_string(),
                         format!("{:.2}", amount_usd),

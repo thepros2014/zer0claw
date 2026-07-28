@@ -66,7 +66,7 @@ impl Memory for FileMemory {
             .open(&*path)
             .map_err(|e| e.to_string())?;
 
-        writeln!(file, "{}", record.to_string()).map_err(|e| e.to_string())?;
+        writeln!(file, "{}", record).map_err(|e| e.to_string())?;
 
         Ok(())
     }
@@ -78,7 +78,7 @@ impl Memory for FileMemory {
 
         let mut results = Vec::new();
 
-        for line in reader.lines().flatten() {
+        for line in reader.lines().map_while(Result::ok) {
             if let Ok(record) = serde_json::from_str::<serde_json::Value>(&line) {
                 let tool_name = record["tool_name"].as_str().unwrap_or("").to_string();
                 let args_str = record["args"].as_str().unwrap_or("").to_string();
