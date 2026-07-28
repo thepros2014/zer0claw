@@ -3,11 +3,12 @@
 ![ZeroClaw Framework](https://img.shields.io/badge/Framework-ZeroClaw-blue)
 ![Solana](https://img.shields.io/badge/Blockchain-Solana-14F195?logo=solana&logoColor=black)
 ![Architecture](https://img.shields.io/badge/Architecture-wasm32--wasip2-orange)
+![Release](https://img.shields.io/badge/Release-v1.1.0-green)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 Welcome to **ZeroClaw Commerce** — the zero-key payment, tax accounting, and digital fulfillment platform for the ZeroClaw agent ecosystem.
 
-ZeroClaw Commerce provides `wasm32-wasip2` plugins, an async FastAPI Gateway, and multi-channel bots (Telegram, WhatsApp, Discord), turning standard agent bots into Tier-1 secure payment processors with dual-currency (BRL/USD) tax reporting and instant digital asset delivery.
+ZeroClaw Commerce provides `wasm32-wasip2` plugins, an async FastAPI Gateway, multi-channel bots (Telegram, WhatsApp, Discord), double-clickable launchers, and a real-time **Merchant Sales & Security Dashboard** with 6-digit PIN protection.
 
 ---
 
@@ -25,7 +26,10 @@ zer0claw/
 │   ├── app/
 │   │   ├── main.py             <-- FastAPI Endpoints & In-Memory Store
 │   │   ├── models.py           <-- Pydantic V2 Schemas & Hashes
-│   │   └── solana.py           <-- Multi-RPC Solana Client & Reference Generator
+│   │   ├── solana.py           <-- Multi-RPC Solana Client & Reference Generator
+│   │   └── static/
+│   │       ├── index.html      <-- Merchant Dashboard (PIN Modal & Sales Stats)
+│   │       └── setup.html      <-- First-Time Setup Wizard (Per-Channel Controls)
 │   └── requirements.txt
 ├── telegram-bot/               <-- Telegram Storefront Bot Application
 │   ├── bot.py                  <-- Async Bot, Multi-Wallet Deep Links & Catalog
@@ -38,10 +42,10 @@ zer0claw/
 ├── zeroclaw-memory/            <-- Flat-file Durable Memory Crate (Rust)
 ├── zeroclaw-api/               <-- Core Plugin WIT Interfaces (Rust)
 ├── mock-cli/                   <-- Interactive Developer Demo CLI (Rust)
-├── start_all.ps1               <-- Automagic One-Click Startup Script (Windows)
-├── start_all.sh                <-- Automagic One-Click Startup Script (Mac/Linux)
-├── enterprise_install.ps1      <-- Enterprise Build & Sandbox Installer (Windows)
-├── enterprise_install.sh       <-- Enterprise Build & Sandbox Installer (Mac/Linux)
+├── Start_ZeroClaw_Commerce.cmd <-- Double-Click Launcher (Gateway + Browser Setup)
+├── Start_MultiChannel_Bots.cmd <-- Double-Click Launcher (Gateway + All 3 Bots)
+├── install_bots.ps1            <-- Automated Bot Dependency Installer (Windows)
+├── install_bots.sh             <-- Automated Bot Dependency Installer (Mac/Linux)
 └── README.md                   <-- Front Page Overview & Repository Sitemap
 ```
 
@@ -66,20 +70,14 @@ Simply **double-click** the launcher file in Windows File Explorer:
 ### 🖱️ Windows (Double-Click):
 Double-click **`Start_ZeroClaw_Commerce.cmd`** in your root folder!
 
-Alternatively via PowerShell:
-```powershell
-.\start_all.ps1
-```
+Alternatively for all 3 bots (Telegram, Discord, WhatsApp):
+Double-click **`Start_MultiChannel_Bots.cmd`**!
 
 ### 💻 Mac / Linux:
 ```bash
-chmod +x start_all.sh
+chmod +x install_bots.sh start_all.sh
 ./start_all.sh
 ```
-
-Double-clicking `Start_ZeroClaw_Commerce.cmd` will automatically:
-1. Start the **FastAPI Commerce Gateway** on `http://127.0.0.1:8000` in the background.
-2. Open your default web browser straight to the **First-Time Setup Wizard** (`http://127.0.0.1:8000/setup`)!
 
 ---
 
