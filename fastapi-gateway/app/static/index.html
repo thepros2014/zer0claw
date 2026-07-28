@@ -253,27 +253,30 @@
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title">📦 Merchant Storefront</div>
+                        <button class="btn btn-outline" style="font-size:0.75rem;" onclick="triggerPinModal('inventory')">🔒 ➕ Edit Stock (PIN)</button>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
-                        <div>
-                            <div style="font-weight:600; font-size:0.9rem;">Mastering Solana Dev</div>
-                            <div style="font-size:0.8rem; color:var(--solana-green);">25.0 USDC</div>
+                    <div id="storefront-item-list">
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                            <div>
+                                <div style="font-weight:600; font-size:0.9rem;">Mastering Solana Dev (Stock: 50)</div>
+                                <div style="font-size:0.8rem; color:var(--solana-green);">25.0 USDC</div>
+                            </div>
+                            <button class="btn btn-outline" style="font-size:0.75rem;" onclick="openQrModal('Mastering Solana Dev', 25.0, 'USDC')">📷 Pay QR</button>
                         </div>
-                        <button class="btn btn-outline" style="font-size:0.75rem;" onclick="openQrModal('Mastering Solana Dev', 25.0, 'USDC')">📷 Pay QR</button>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
-                        <div>
-                            <div style="font-weight:600; font-size:0.9rem;">Merchant API License Key</div>
-                            <div style="font-size:0.8rem; color:var(--solana-green);">49.0 USDC</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                            <div>
+                                <div style="font-weight:600; font-size:0.9rem;">Merchant API License Key (Stock: 100)</div>
+                                <div style="font-size:0.8rem; color:var(--solana-green);">49.0 USDC</div>
+                            </div>
+                            <button class="btn btn-outline" style="font-size:0.75rem;" onclick="openQrModal('Merchant API License Key', 49.0, 'USDC')">📷 Pay QR</button>
                         </div>
-                        <button class="btn btn-outline" style="font-size:0.75rem;" onclick="openQrModal('Merchant API License Key', 49.0, 'USDC')">📷 Pay QR</button>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0;">
-                        <div>
-                            <div style="font-weight:600; font-size:0.9rem;">VIP Mastermind Access Pass</div>
-                            <div style="font-size:0.8rem; color:var(--solana-green);">0.5 SOL</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0;">
+                            <div>
+                                <div style="font-weight:600; font-size:0.9rem;">VIP Mastermind Access Pass (Stock: 25)</div>
+                                <div style="font-size:0.8rem; color:var(--solana-green);">0.5 SOL</div>
+                            </div>
+                            <button class="btn btn-outline" style="font-size:0.75rem;" onclick="openQrModal('VIP Mastermind Access Pass', 0.5, 'SOL')">📷 Pay QR</button>
                         </div>
-                        <button class="btn btn-outline" style="font-size:0.75rem;" onclick="openQrModal('VIP Mastermind Access Pass', 0.5, 'SOL')">📷 Pay QR</button>
                     </div>
                 </div>
 
@@ -311,6 +314,51 @@
             <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom: 1rem;">📷 Scan this QR Code with your mobile phone camera, Phantom, Solflare, or Backpack wallet app!</p>
 
             <button class="btn btn-outline" style="width:100%;" onclick="closeQrModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Inventory Editor Form Modal -->
+    <div class="pin-modal-overlay" id="inventory-modal">
+        <div class="pin-card" style="width: 420px; text-align: left;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; text-align:center;">📦 Add / Edit Storefront Stock</h3>
+
+            <div style="margin-bottom: 0.75rem;">
+                <label style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase;">Product SKU</label>
+                <input type="text" id="inv_sku" value="SKU_RUST_COURSE" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid var(--panel-border); border-radius:8px; padding:0.6rem; color:white; font-family:inherit;">
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+                <label style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase;">Product Name</label>
+                <input type="text" id="inv_name" value="Solana Rust Masterclass" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid var(--panel-border); border-radius:8px; padding:0.6rem; color:white; font-family:inherit;">
+            </div>
+
+            <div style="display:flex; gap:0.5rem; margin-bottom: 0.75rem;">
+                <div style="flex:2;">
+                    <label style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase;">Price</label>
+                    <input type="number" id="inv_price" value="29.0" step="0.1" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid var(--panel-border); border-radius:8px; padding:0.6rem; color:white; font-family:inherit;">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase;">Symbol</label>
+                    <select id="inv_symbol" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid var(--panel-border); border-radius:8px; padding:0.6rem; color:white; font-family:inherit;">
+                        <option value="USDC">USDC</option>
+                        <option value="SOL">SOL</option>
+                    </select>
+                </div>
+                <div style="flex:1.5;">
+                    <label style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase;">Quantity</label>
+                    <input type="number" id="inv_stock" value="100" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid var(--panel-border); border-radius:8px; padding:0.6rem; color:white; font-family:inherit;">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase;">Description</label>
+                <input type="text" id="inv_desc" value="Full 10-module WASM Rust & Solana Pay course" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid var(--panel-border); border-radius:8px; padding:0.6rem; color:white; font-family:inherit;">
+            </div>
+
+            <div style="display:flex; gap:0.5rem;">
+                <button class="btn" style="flex:1;" onclick="saveInventoryProduct()">💾 Save Item</button>
+                <button class="btn btn-outline" style="flex:1;" onclick="closeInventoryModal()">Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -390,6 +438,36 @@
             document.getElementById('pin-display').innerText = '*'.repeat(currentPin.length) || '------';
         }
 
+        function openInventoryModal() {
+            document.getElementById('inventory-modal').style.display = 'flex';
+        }
+
+        function closeInventoryModal() {
+            document.getElementById('inventory-modal').style.display = 'none';
+        }
+
+        function saveInventoryProduct() {
+            const sku = document.getElementById('inv_sku').value;
+            const name = document.getElementById('inv_name').value;
+            const price = parseFloat(document.getElementById('inv_price').value || 0);
+            const symbol = document.getElementById('inv_symbol').value;
+            const stock = parseInt(document.getElementById('inv_stock').value || 0);
+
+            const newItemHtml = `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                    <div>
+                        <div style="font-weight:600; font-size:0.9rem;">${name} (Stock: ${stock})</div>
+                        <div style="font-size:0.8rem; color:var(--solana-green);">${price.toFixed(1)} ${symbol}</div>
+                    </div>
+                    <button class="btn btn-outline" style="font-size:0.75rem;" onclick="openQrModal('${name}', ${price}, '${symbol}')">📷 Pay QR</button>
+                </div>
+            `;
+
+            document.getElementById('storefront-item-list').insertAdjacentHTML('afterbegin', newItemHtml);
+            closeInventoryModal();
+            alert(`✅ Product "${name}" saved to storefront inventory!`);
+        }
+
         async function submitPin() {
             if (currentPin.length !== 6) {
                 alert('Please enter a 6-digit PIN.');
@@ -405,11 +483,9 @@
                 const data = await res.json();
                 if (data.valid) {
                     closePinModal();
-                    if (pendingAction === 'export') {
-                        exportCSV();
-                    } else if (pendingAction === 'config') {
-                        window.location.href = '/setup';
-                    }
+                    if (pendingAction === 'export') exportCSV();
+                    else if (pendingAction === 'config') window.location.href = '/setup';
+                    else if (pendingAction === 'inventory') openInventoryModal();
                 } else {
                     alert('❌ Invalid Admin PIN.');
                     clearPin();
@@ -419,7 +495,8 @@
                 if (currentPin === '123456') {
                     closePinModal();
                     if (pendingAction === 'export') exportCSV();
-                    else window.location.href = '/setup';
+                    else if (pendingAction === 'config') window.location.href = '/setup';
+                    else if (pendingAction === 'inventory') openInventoryModal();
                 } else {
                     alert('❌ Invalid Admin PIN.');
                     clearPin();
