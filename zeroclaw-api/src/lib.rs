@@ -51,13 +51,18 @@ impl CryptographicReceipt {
         payload.extend_from_slice(&timestamp.to_be_bytes());
 
         // Sign the payload
-        let secret_key: [u8; 32] = identity_key_bytes.try_into().expect("Identity key must be exactly 32 bytes");
+        let secret_key: [u8; 32] = identity_key_bytes
+            .try_into()
+            .expect("Identity key must be exactly 32 bytes");
         let signing_key = SigningKey::from_bytes(&secret_key);
         let sig: Signature = signing_key.sign(&payload);
-        
+
         let signature = hex::encode(sig.to_bytes());
 
-        Self { signature, timestamp }
+        Self {
+            signature,
+            timestamp,
+        }
     }
 }
 

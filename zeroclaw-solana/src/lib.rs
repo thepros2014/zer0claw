@@ -108,7 +108,7 @@ impl Tool for SolanaRiskCheckTool {
             let simulated_network_result: Result<TokenMetadata, &str> = (|| {
                 let rpc_url = "https://api.mainnet-beta.solana.com";
                 let pubkey = Pubkey::from_str(token_address_str).map_err(|_| "Invalid Pubkey")?;
-                
+
                 // Construct JSON-RPC payload manually since solana-client is not wasm32-wasip2 compatible
                 let payload = json!({
                     "jsonrpc": "2.0",
@@ -121,12 +121,15 @@ impl Tool for SolanaRiskCheckTool {
                 });
 
                 let client = waki::Client::new();
-                let req = client.post(rpc_url)
+                let req = client
+                    .post(rpc_url)
                     .header("Content-Type", "application/json")
                     .body(payload.to_string().as_bytes());
 
-                let resp = req.send().map_err(|_| "Failed to fetch from RPC via waki")?;
-                
+                let resp = req
+                    .send()
+                    .map_err(|_| "Failed to fetch from RPC via waki")?;
+
                 if resp.status_code() != 200 {
                     return Err("RPC request failed");
                 }
@@ -284,7 +287,7 @@ impl Tool for SolanaTransferTool {
 
         // --- SEMANTIC RECEIPTS ---
         let mut solana_pay_url = format!("solana:{}?amount={}", destination, amount);
-        
+
         if let Some(intent) = args.get("semantic_intent").and_then(|v| v.as_str()) {
             let encoded_intent = urlencoding::encode(intent);
             solana_pay_url.push_str(&format!("&message={}", encoded_intent));
@@ -379,7 +382,9 @@ mod tests {
             &ctx,
         );
         assert!(result.success);
-        assert!(result.output.contains("solana:DestWallet11111111111111111111111111111111?amount=50.5"));
+        assert!(result
+            .output
+            .contains("solana:DestWallet11111111111111111111111111111111?amount=50.5"));
     }
 
     #[test]
@@ -411,6 +416,8 @@ mod tests {
             &ctx,
         );
         assert!(result.success);
-        assert!(result.output.contains("&message=Paying%20vendor%20for%20services"));
+        assert!(result
+            .output
+            .contains("&message=Paying%20vendor%20for%20services"));
     }
 }

@@ -44,7 +44,7 @@ impl Memory for FileMemory {
         result: &ToolResult,
     ) -> Result<(), String> {
         let path = self.file_path.lock().unwrap();
-        
+
         let (signature, timestamp) = match &result.receipt {
             Some(receipt) => (Some(receipt.signature.clone()), Some(receipt.timestamp)),
             None => (None, None),
@@ -85,7 +85,7 @@ impl Memory for FileMemory {
                 let success = record["success"].as_bool().unwrap_or(false);
                 let output = record["output"].as_str().unwrap_or("").to_string();
                 let error = record["error"].as_str().map(|s| s.to_string());
-                
+
                 let signature = record["receipt_signature"].as_str().map(|s| s.to_string());
                 let timestamp = record["receipt_timestamp"].as_u64();
 
@@ -118,8 +118,8 @@ impl Memory for FileMemory {
 mod tests {
     use super::*;
     use serde_json::json;
-    use zeroclaw_api::CryptographicReceipt;
     use std::fs;
+    use zeroclaw_api::CryptographicReceipt;
 
     #[test]
     fn test_file_memory_log_and_retrieve() {
@@ -141,7 +141,9 @@ mod tests {
         };
 
         // Log it
-        memory.log_tool_execution(tool_name, &args, &result).unwrap();
+        memory
+            .log_tool_execution(tool_name, &args, &result)
+            .unwrap();
 
         // Retrieve it
         let trail = memory.get_audit_trail().unwrap();
@@ -153,7 +155,7 @@ mod tests {
         assert!(ret_result.success);
         assert_eq!(ret_result.output, "Success!");
         assert!(ret_result.receipt.is_some());
-        
+
         let retrieved_receipt = ret_result.receipt.as_ref().unwrap();
         assert_eq!(retrieved_receipt.signature, "fake_digest_hex");
         assert_eq!(retrieved_receipt.timestamp, 123456789);

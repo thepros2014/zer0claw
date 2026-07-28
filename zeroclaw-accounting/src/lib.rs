@@ -17,14 +17,26 @@ impl ProcessPaymentTool {
         } else {
             db_path.to_string()
         };
-        
+
         Self { db_path: path }
     }
 
     fn fail(&self, msg: String, args: &Value, ctx: &ToolContext) -> ToolResult {
         let error = Some(msg);
-        let receipt = CryptographicReceipt::generate(&ctx.identity_key_bytes, self.name(), args, false, "", error.as_ref());
-        ToolResult { success: false, output: String::new(), error, receipt: Some(receipt) }
+        let receipt = CryptographicReceipt::generate(
+            &ctx.identity_key_bytes,
+            self.name(),
+            args,
+            false,
+            "",
+            error.as_ref(),
+        );
+        ToolResult {
+            success: false,
+            output: String::new(),
+            error,
+            receipt: Some(receipt),
+        }
     }
 }
 
@@ -86,13 +98,22 @@ impl Tool for ProcessPaymentTool {
         };
 
         // Live USD and BRL Conversion via waki (wasi:http)
-        let url = format!("https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies=usd,brl", crypto_id);
+        let url = format!(
+            "https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies=usd,brl",
+            crypto_id
+        );
         let client = waki::Client::new();
         let req = client.get(&url);
-        
+
         let _resp = match req.send() {
             Ok(r) => r,
-            Err(_) => return self.fail("Failed to fetch live price data via waki".to_string(), &args, ctx),
+            Err(_) => {
+                return self.fail(
+                    "Failed to fetch live price data via waki".to_string(),
+                    &args,
+                    ctx,
+                )
+            }
         };
 
         let price_usd = 150.00; // Simulated $150 SOL price to avoid complex deserialization logic in hackathon slice
@@ -102,10 +123,20 @@ impl Tool for ProcessPaymentTool {
         let amount_brl = crypto_amount * price_brl;
 
         let output = format!("Payment of {} {} processed and logged to dual tax ledger (IRS & Receita Federal). Category: {}. Total: ${:.2} USD | R${:.2} BRL", crypto_amount, crypto_id, category, amount_usd, amount_brl);
-        let receipt = CryptographicReceipt::generate(&ctx.identity_key_bytes, self.name(), &args, true, &output, None);
+        let receipt = CryptographicReceipt::generate(
+            &ctx.identity_key_bytes,
+            self.name(),
+            &args,
+            true,
+            &output,
+            None,
+        );
         let receipt_signature = receipt.signature.clone();
-        
-        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
 
         // Write to flat file JSONL
         let record = json!({
@@ -117,7 +148,11 @@ impl Tool for ProcessPaymentTool {
             "receipt_signature": receipt_signature
         });
 
-        if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&self.db_path) {
+        if let Ok(mut file) = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&self.db_path)
+        {
             let _ = writeln!(file, "{}", record.to_string());
         }
 
@@ -147,8 +182,20 @@ impl GenerateTaxReportTool {
 
     fn fail(&self, msg: String, args: &Value, ctx: &ToolContext) -> ToolResult {
         let error = Some(msg);
-        let receipt = CryptographicReceipt::generate(&ctx.identity_key_bytes, self.name(), args, false, "", error.as_ref());
-        ToolResult { success: false, output: String::new(), error, receipt: Some(receipt) }
+        let receipt = CryptographicReceipt::generate(
+            &ctx.identity_key_bytes,
+            self.name(),
+            args,
+            false,
+            "",
+            error.as_ref(),
+        );
+        ToolResult {
+            success: false,
+            output: String::new(),
+            error,
+            receipt: Some(receipt),
+        }
     }
 }
 
@@ -186,7 +233,14 @@ impl Tool for GenerateTaxReportTool {
             Err(_) => return self.fail("Could not create CSV file".to_string(), &args, ctx),
         };
 
-        let _ = wtr.write_record(&["Timestamp", "Wallet Address", "Amount (USD)", "Amount (BRL)", "Tax Category", "Cryptographic Receipt Hash"]);
+        let _ = wtr.write_record(&[
+            "Timestamp",
+            "Wallet Address",
+            "Amount (USD)",
+            "Amount (BRL)",
+            "Tax Category",
+            "Cryptographic Receipt Hash",
+        ]);
 
         let mut total_revenue_usd = 0.0;
         let mut total_revenue_brl = 0.0;
@@ -213,7 +267,7 @@ impl Tool for GenerateTaxReportTool {
                         format!("{:.2}", amount_usd),
                         format!("{:.2}", amount_brl),
                         category.to_string(),
-                        hash.to_string()
+                        hash.to_string(),
                     ]);
                 }
             }
@@ -222,7 +276,14 @@ impl Tool for GenerateTaxReportTool {
         let _ = wtr.flush();
 
         let output = format!("Successfully aggregated {} taxable events. Total Revenue: ${:.2} USD | R${:.2} BRL. Report saved to '{}'.", count, total_revenue_usd, total_revenue_brl, filename);
-        let receipt = CryptographicReceipt::generate(&ctx.identity_key_bytes, self.name(), &args, true, &output, None);
+        let receipt = CryptographicReceipt::generate(
+            &ctx.identity_key_bytes,
+            self.name(),
+            &args,
+            true,
+            &output,
+            None,
+        );
 
         ToolResult {
             success: true,
