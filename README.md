@@ -11,6 +11,42 @@ ZeroClaw Commerce provides `wasm32-wasip2` plugins, an async FastAPI Gateway, an
 
 ---
 
+## 📂 Repository Directory Structure
+
+```text
+zer0claw/
+├── docs/                       <-- Consolidated Documentation
+│   ├── SUBMISSION.md           <-- Official Superteam Bounty Submission
+│   ├── ARCHITECTURE.md         <-- Technical Architecture & 6-Layer Security
+│   ├── VISION.md               <-- Strategic Roadmap & Enterprise Vision
+│   ├── TELEGRAM_BOT.md         <-- Telegram Storefront Setup & Commands
+│   └── MULTI_CHANNEL.md        <-- Discord Slash Commands & WhatsApp Webhook
+├── fastapi-gateway/            <-- Async REST Gateway (Replay Protection & Fulfillment)
+│   ├── app/
+│   │   ├── main.py             <-- FastAPI Endpoints & In-Memory Store
+│   │   ├── models.py           <-- Pydantic V2 Schemas & Hashes
+│   │   └── solana.py           <-- Multi-RPC Solana Client & Reference Generator
+│   └── requirements.txt
+├── telegram-bot/               <-- Telegram Storefront Bot Application
+│   ├── bot.py                  <-- Async Bot, Multi-Wallet Deep Links & Catalog
+│   └── requirements.txt
+├── skills/                     <-- Official Zer0claw Skill Manifest
+│   └── solana-commerce/
+│       └── SKILL.md            <-- Skill Manifest & Standard Operating Procedure (SOP)
+├── zeroclaw-solana/            <-- WASM Risk Engine & Solana Pay Crate (Rust)
+├── zeroclaw-accounting/        <-- WASM Dual-Currency Tax Accounting Crate (Rust)
+├── zeroclaw-memory/            <-- Flat-file Durable Memory Crate (Rust)
+├── zeroclaw-api/               <-- Core Plugin WIT Interfaces (Rust)
+├── mock-cli/                   <-- Interactive Developer Demo CLI (Rust)
+├── start_all.ps1               <-- Automagic One-Click Startup Script (Windows)
+├── start_all.sh                <-- Automagic One-Click Startup Script (Mac/Linux)
+├── enterprise_install.ps1      <-- Enterprise Build & Sandbox Installer (Windows)
+├── enterprise_install.sh       <-- Enterprise Build & Sandbox Installer (Mac/Linux)
+└── README.md                   <-- Front Page Overview & Repository Sitemap
+```
+
+---
+
 ## 📚 Documentation Index (`docs/`)
 
 | Document | Description |
@@ -37,15 +73,6 @@ Launch the entire stack (FastAPI Gateway + Telegram Bot) with a single command:
 chmod +x start_all.sh
 ./start_all.sh
 ```
-
----
-
-## 📦 Core Architecture
-- `fastapi-gateway`: Async Python REST gateway with replay protection (`VERIFIED_SIGNATURES`), invoice expiration, and digital goods delivery.
-- `telegram-bot`: Production-ready Telegram bot (`bot.py`) for merchant storefronts.
-- `zeroclaw-solana`: WASM plugin providing live RPC token risk-checks and Solana Pay URI generation.
-- `zeroclaw-accounting`: WASM plugin providing live USD/BRL fiat price fetching and CSV tax generation.
-- `zeroclaw-memory`: A flat-file JSONL durable memory backend for WASM compatibility without C-toolchain dependencies.
 
 ---
 
