@@ -39,3 +39,6 @@ This script will cross-compile the plugins to WebAssembly, create a deployment d
 This framework explicitly operates in **Tier 1**. The LLM and the agent process hold absolutely **zero** private keys. The agent is strictly a transaction proposer, bouncing the unsigned Solana Pay URI back to a human with a mobile wallet or Ledger hardware device for final cryptographic authorization. 
 
 If the agent is prompt-injected or suffers an RPC failure, the physical hardware approval checkpoint catches it, ensuring a 100% fail-closed system.
+
+## 🔮 Strategic Vision & Market Dominance
+To see how this architecture scales to Institutional and High-TVL DeFi use cases, read our strategic roadmap: **[VISION.md](./VISION.md)**. It outlines our plans for Zero-Knowledge Audit Trails (zkVM), Policy-as-Code Guardrails, and Oracle Consensus to solidify ZeroClaw as the industry standard for Trustless AI.

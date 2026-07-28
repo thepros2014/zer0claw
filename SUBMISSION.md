@@ -54,6 +54,10 @@ Our Tier 2 production architecture elevates the agent to a **Proposer on a Squad
 - **Blockhash Expiry is eliminated**, as proposed multisig transactions live on-chain indefinitely.
 - The human operator logs into the Squads dApp in the morning with their Ledger and clicks a single "Execute All" button.
 
+### 6.1 Feature Expansion for Market Dominance
+To scale this architecture to institutional users and High-TVL DeFi, we have mapped out a comprehensive roadmap including **Policy-as-Code**, **ZK Audit Trails**, and **Oracle Consensus**. 
+Please read our **[Strategic Vision Document](./VISION.md)** for a full breakdown of how ZeroClaw captures the enterprise market.
+
 ## 7. Reproducibility & One-Click Enterprise Deployment
 We have included cross-platform installation scripts (`enterprise_install.sh` and `enterprise_install.ps1`) to instantly provision a secure, air-gapped terminal node.
 
