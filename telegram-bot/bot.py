@@ -131,22 +131,24 @@ async def fn_buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 invoice_id = data["invoice_id"]
                 symbol = "USDC" if product["crypto_symbol"] == "usd-coin" else "SOL"
 
-                # Multi-Wallet Deep Links
+                # Multi-Wallet Deep Links & QR Code URL
                 encoded_url = urllib.parse.quote(solana_pay_url)
                 phantom_link = f"https://phantom.app/ul/browse/{encoded_url}?ref=zeroclaw"
                 solflare_link = f"https://solflare.com/ul/v1/browse/{encoded_url}?ref=zeroclaw"
                 backpack_link = f"https://backpack.app/ul/browse/{encoded_url}?ref=zeroclaw"
+                qr_code_url = f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={encoded_url}"
 
                 msg = (
                     f"✅ <b>Invoice Created:</b> <code>{invoice_id}</code>\n\n"
                     f"Item: <b>{product['name']}</b>\n"
                     f"Amount Due: <b>{product['amount_crypto']} {symbol}</b>\n"
                     f"Expires in: <b>15 minutes</b>\n\n"
-                    f"📱 <b>Solana Pay Payload (Works with ALL Wallets):</b>\n"
+                    f"📷 <b>Scan the QR Code image above with your phone camera or mobile wallet!</b>\n\n"
+                    f"📱 <b>Solana Pay Payload:</b>\n"
                     f"<code>{solana_pay_url}</code>\n\n"
-                    f"<b>Select Your Wallet Below:</b>\n"
-                    f"1. Click your mobile wallet button below or copy the payload above.\n"
-                    f"2. Sign & broadcast the transaction in Phantom, Solflare, Backpack, or Ledger.\n"
+                    f"<b>Or Select Your Mobile Wallet Below:</b>\n"
+                    f"1. Tap Phantom, Solflare, or Backpack below.\n"
+                    f"2. Authorize the transaction in your wallet.\n"
                     f"3. Copy your transaction signature and run:\n"
                     f"<code>/verify {invoice_id} &lt;YOUR_TX_SIGNATURE&gt;</code>"
                 )
@@ -162,8 +164,10 @@ async def fn_buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 ]
                 reply_markup = InlineKeyboardMarkup(keyboard)
 
-                await update.message.reply_text(
-                    msg,
+                # Send QR Code photo directly into chat
+                await update.message.reply_photo(
+                    photo=qr_code_url,
+                    caption=msg,
                     parse_mode=ParseMode.HTML,
                     reply_markup=reply_markup,
                 )
