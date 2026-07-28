@@ -1,7 +1,33 @@
-target/
+# Rust build artifacts
+/target/
+
+# Python Virtual Environments & Caches
+.venv/
+venv/
+*venv/
+.ClawVenv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Environment Variables & Secrets
+.env
+*.env
+!.env.example
+
+# OS Generated Files
+desktop.ini
+[Dd]esktop.ini
+Thumbs.db
+.DS_Store
+
+# Data & Database Files
 models/
 *.gguf
 *.db
 *.sqlite
 *.sqlite3
 .cache/
+dist/
