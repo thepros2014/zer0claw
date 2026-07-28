@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZeroClaw Commerce — First-Time Merchant Setup</title>
+    <title>ZeroClaw Commerce — First-Time Merchant Setup & Multi-Channel Installer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -45,7 +45,7 @@
             border-radius: 20px;
             padding: 2.5rem;
             width: 100%;
-            max-width: 580px;
+            max-width: 640px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
         }
 
@@ -93,7 +93,7 @@
             letter-spacing: 0.05em;
         }
 
-        input {
+        input[type="text"], input[type="number"], input[type="password"] {
             width: 100%;
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid var(--panel-border);
@@ -109,6 +109,32 @@
             outline: none;
             border-color: var(--solana-green);
             box-shadow: 0 0 10px rgba(20, 241, 149, 0.2);
+        }
+
+        .channels-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .channel-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .channel-card input {
+            accent-color: var(--solana-green);
+            width: 18px;
+            height: 18px;
         }
 
         .help-text {
@@ -159,41 +185,55 @@
         <div class="header">
             <div class="header-icon">🛡️</div>
             <h1 class="title">ZeroClaw Commerce</h1>
-            <p class="subtitle">First-Time Merchant Storefront Setup Wizard</p>
+            <p class="subtitle">Multi-Channel Bot Installer & Storefront Wizard</p>
         </div>
 
         <form id="setup-form">
             <div class="form-group">
                 <label for="store_name">Merchant Store Name</label>
                 <input type="text" id="store_name" value="Solana Dev Academy Store" required>
-                <p class="help-text">The display name shown on customer receipts and invoices.</p>
             </div>
 
             <div class="form-group">
                 <label for="merchant_wallet">Solana Receiving Wallet Address</label>
                 <input type="text" id="merchant_wallet" value="DestWallet11111111111111111111111111111111" required>
-                <p class="help-text">Where 100% of customer USDC & SOL payments are deposited.</p>
+            </div>
+
+            <div class="form-group">
+                <label>Select Active Sales Channels (Automated Installer)</label>
+                <div class="channels-grid">
+                    <label class="channel-card">
+                        <input type="checkbox" id="chk_telegram" checked>
+                        <span>🤖 Telegram</span>
+                    </label>
+                    <label class="channel-card">
+                        <input type="checkbox" id="chk_discord" checked>
+                        <span>🎮 Discord</span>
+                    </label>
+                    <label class="channel-card">
+                        <input type="checkbox" id="chk_whatsapp" checked>
+                        <span>📱 WhatsApp</span>
+                    </label>
+                </div>
             </div>
 
             <div class="form-group">
                 <label for="telegram_token">Telegram Bot Token (from @BotFather)</label>
-                <input type="password" id="telegram_token" placeholder="7890123456:AAFd4b... (Optional for local testing)">
-                <p class="help-text">Message @BotFather on Telegram to get your free bot token.</p>
+                <input type="password" id="telegram_token" placeholder="7890123456:AAFd4b... (Optional for testing)">
             </div>
 
             <div class="form-group">
                 <label for="max_spend">Max Spend Policy Limit ($USD)</label>
                 <input type="number" id="max_spend" value="100.0" step="10" required>
-                <p class="help-text">WASM Rust Policy-as-Code firewall guardrail limit per invoice.</p>
             </div>
 
             <button type="submit" class="btn-submit">
-                🚀 Save Configuration & Launch Storefront
+                🚀 Install Channels & Launch Storefront
             </button>
         </form>
 
         <div class="alert-success" id="success-alert">
-            ✅ <b>Setup Saved Successfully!</b><br>
+            ✅ <b>Multi-Channel Bots Provisioned!</b><br>
             Redirecting to your Sales & Security Dashboard...
         </div>
     </div>
@@ -204,6 +244,11 @@
             const payload = {
                 store_name: document.getElementById('store_name').value,
                 merchant_wallet: document.getElementById('merchant_wallet').value,
+                channels: {
+                    telegram: document.getElementById('chk_telegram').checked,
+                    discord: document.getElementById('chk_discord').checked,
+                    whatsapp: document.getElementById('chk_whatsapp').checked,
+                },
                 telegram_bot_token: document.getElementById('telegram_token').value,
                 max_spend_policy: parseFloat(document.getElementById('max_spend').value)
             };
@@ -225,7 +270,6 @@
                     alert('Error saving configuration.');
                 }
             } catch (err) {
-                // Fallback redirect
                 window.location.href = '/dashboard';
             }
         });
