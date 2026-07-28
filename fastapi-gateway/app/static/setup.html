@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZeroClaw Commerce — First-Time Merchant Setup & Multi-Channel Installer</title>
+    <title>ZeroClaw Commerce — Merchant Setup & Channel Wizard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,11 +18,7 @@
             --text-secondary: #94A3B8;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -45,137 +41,73 @@
             border-radius: 20px;
             padding: 2.5rem;
             width: 100%;
-            max-width: 640px;
+            max-width: 680px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
+        .header { text-align: center; margin-bottom: 2rem; }
         .header-icon {
-            width: 56px;
-            height: 56px;
+            width: 56px; height: 56px;
             background: linear-gradient(135deg, var(--solana-purple), var(--solana-green));
             border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            margin: 0 auto 1rem auto;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; margin: 0 auto 1rem auto;
             box-shadow: 0 0 30px rgba(153, 69, 255, 0.4);
         }
+        .title { font-size: 1.6rem; font-weight: 800; margin-bottom: 0.4rem; }
+        .subtitle { color: var(--text-secondary); font-size: 0.9rem; }
 
-        .title {
-            font-size: 1.6rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            margin-bottom: 0.4rem;
-        }
-
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-
+        .form-group { margin-bottom: 1.25rem; }
         label {
-            display: block;
-            font-size: 0.825rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 0.4rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            display: block; font-size: 0.825rem; font-weight: 600;
+            color: var(--text-secondary); margin-bottom: 0.4rem;
+            text-transform: uppercase; letter-spacing: 0.05em;
         }
 
-        input[type="text"], input[type="number"], input[type="password"] {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--panel-border);
-            border-radius: 10px;
-            padding: 0.85rem 1rem;
-            color: white;
-            font-size: 0.95rem;
-            font-family: inherit;
-            transition: border-color 0.2s;
+        input[type="text"], input[type="number"], input[type="password"], select {
+            width: 100%; background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--panel-border); border-radius: 10px;
+            padding: 0.85rem 1rem; color: white; font-size: 0.95rem;
+            font-family: inherit; transition: border-color 0.2s;
         }
 
-        input:focus {
-            outline: none;
-            border-color: var(--solana-green);
+        input:focus, select:focus {
+            outline: none; border-color: var(--solana-green);
             box-shadow: 0 0 10px rgba(20, 241, 149, 0.2);
         }
 
-        .channels-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-            margin-top: 0.5rem;
-        }
-
-        .channel-card {
-            background: rgba(255, 255, 255, 0.03);
+        .channel-block {
+            background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--panel-border);
-            border-radius: 12px;
-            padding: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
+            border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem;
         }
 
-        .channel-card input {
-            accent-color: var(--solana-green);
-            width: 18px;
-            height: 18px;
+        .channel-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 0.75rem;
         }
 
-        .help-text {
-            font-size: 0.775rem;
-            color: rgba(255, 255, 255, 0.4);
-            margin-top: 0.3rem;
+        .channel-title { font-weight: 700; font-size: 0.95rem; }
+
+        .mode-select {
+            background: rgba(0, 0, 0, 0.4); color: var(--solana-green);
+            border: 1px solid var(--panel-border); border-radius: 6px;
+            padding: 0.35rem 0.7rem; font-size: 0.8rem; font-weight: 600;
         }
 
         .btn-submit {
-            width: 100%;
-            background: linear-gradient(135deg, var(--solana-purple), #7C3AED);
-            color: white;
-            border: none;
-            padding: 1rem;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.2s, opacity 0.2s;
-            margin-top: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
+            width: 100%; background: linear-gradient(135deg, var(--solana-purple), #7C3AED);
+            color: white; border: none; padding: 1rem; border-radius: 12px;
+            font-size: 1rem; font-weight: 700; cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s; margin-top: 1rem;
         }
-
-        .btn-submit:hover {
-            opacity: 0.95;
-            transform: translateY(-1px);
-        }
+        .btn-submit:hover { opacity: 0.95; transform: translateY(-1px); }
 
         .alert-success {
-            display: none;
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            color: #10B981;
-            padding: 1rem;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            text-align: center;
-            margin-top: 1rem;
+            display: none; background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3); color: #10B981;
+            padding: 1rem; border-radius: 10px; font-size: 0.9rem;
+            text-align: center; margin-top: 1rem;
         }
     </style>
 </head>
@@ -185,7 +117,7 @@
         <div class="header">
             <div class="header-icon">🛡️</div>
             <h1 class="title">ZeroClaw Commerce</h1>
-            <p class="subtitle">Multi-Channel Bot Installer & Storefront Wizard</p>
+            <p class="subtitle">First-Time Setup & Per-Channel Configuration Wizard</p>
         </div>
 
         <form id="setup-form">
@@ -199,58 +131,83 @@
                 <input type="text" id="merchant_wallet" value="DestWallet11111111111111111111111111111111" required>
             </div>
 
+            <!-- Admin PIN Setup -->
             <div class="form-group">
-                <label>Select Active Sales Channels (Automated Installer)</label>
-                <div class="channels-grid">
-                    <label class="channel-card">
-                        <input type="checkbox" id="chk_telegram" checked>
-                        <span>🤖 Telegram</span>
-                    </label>
-                    <label class="channel-card">
-                        <input type="checkbox" id="chk_discord" checked>
-                        <span>🎮 Discord</span>
-                    </label>
-                    <label class="channel-card">
-                        <input type="checkbox" id="chk_whatsapp" checked>
-                        <span>📱 WhatsApp</span>
-                    </label>
+                <label for="admin_pin">Create 6-Digit Admin Security PIN</label>
+                <input type="password" id="admin_pin" value="123456" maxlength="6" pattern="\d{6}" required>
+                <p style="font-size:0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Required to unlock Tax CSV exports & Admin controls in the dashboard.</p>
+            </div>
+
+            <!-- Channel 1: Telegram -->
+            <div class="channel-block">
+                <div class="channel-header">
+                    <span class="channel-title">🤖 Telegram Storefront Bot</span>
+                    <select id="mode_telegram" class="mode-select" onchange="toggleChannel('telegram')">
+                        <option value="configure">⚙️ Configure Now</option>
+                        <option value="skip">⏭️ Skip for Later</option>
+                    </select>
+                </div>
+                <div id="fields_telegram">
+                    <input type="password" id="token_telegram" placeholder="Telegram Token (from @BotFather)">
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="telegram_token">Telegram Bot Token (from @BotFather)</label>
-                <input type="password" id="telegram_token" placeholder="7890123456:AAFd4b... (Optional for testing)">
+            <!-- Channel 2: Discord -->
+            <div class="channel-block">
+                <div class="channel-header">
+                    <span class="channel-title">🎮 Discord Slash Bot</span>
+                    <select id="mode_discord" class="mode-select" onchange="toggleChannel('discord')">
+                        <option value="configure">⚙️ Configure Now</option>
+                        <option value="skip" selected>⏭️ Skip for Later</option>
+                    </select>
+                </div>
+                <div id="fields_discord" style="display: none;">
+                    <input type="password" id="token_discord" placeholder="Discord Bot Token">
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="max_spend">Max Spend Policy Limit ($USD)</label>
-                <input type="number" id="max_spend" value="100.0" step="10" required>
+            <!-- Channel 3: WhatsApp -->
+            <div class="channel-block">
+                <div class="channel-header">
+                    <span class="channel-title">📱 WhatsApp Cloud API Webhook</span>
+                    <select id="mode_whatsapp" class="mode-select" onchange="toggleChannel('whatsapp')">
+                        <option value="configure">⚙️ Configure Now</option>
+                        <option value="skip" selected>⏭️ Skip for Later</option>
+                    </select>
+                </div>
+                <div id="fields_whatsapp" style="display: none;">
+                    <input type="text" id="token_whatsapp" placeholder="WhatsApp Verify Token" value="solona_secure_verify_token">
+                </div>
             </div>
 
             <button type="submit" class="btn-submit">
-                🚀 Install Channels & Launch Storefront
+                🚀 Save Setup & Open Dashboard
             </button>
         </form>
 
         <div class="alert-success" id="success-alert">
-            ✅ <b>Multi-Channel Bots Provisioned!</b><br>
-            Redirecting to your Sales & Security Dashboard...
+            ✅ <b>Configuration Saved!</b><br>
+            Redirecting to Sales & Security Dashboard...
         </div>
     </div>
 
     <script>
+        function toggleChannel(ch) {
+            const mode = document.getElementById(`mode_${ch}`).value;
+            document.getElementById(`fields_${ch}`).style.display = (mode === 'configure') ? 'block' : 'none';
+        }
+
         document.getElementById('setup-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const payload = {
                 store_name: document.getElementById('store_name').value,
                 merchant_wallet: document.getElementById('merchant_wallet').value,
+                admin_pin: document.getElementById('admin_pin').value,
                 channels: {
-                    telegram: document.getElementById('chk_telegram').checked,
-                    discord: document.getElementById('chk_discord').checked,
-                    whatsapp: document.getElementById('chk_whatsapp').checked,
-                },
-                telegram_bot_token: document.getElementById('telegram_token').value,
-                max_spend_policy: parseFloat(document.getElementById('max_spend').value)
+                    telegram: document.getElementById('mode_telegram').value,
+                    discord: document.getElementById('mode_discord').value,
+                    whatsapp: document.getElementById('mode_whatsapp').value,
+                }
             };
 
             try {
@@ -259,15 +216,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-
                 if (res.ok) {
                     document.getElementById('setup-form').style.display = 'none';
                     document.getElementById('success-alert').style.display = 'block';
-                    setTimeout(() => {
-                        window.location.href = '/dashboard';
-                    }, 1500);
-                } else {
-                    alert('Error saving configuration.');
+                    setTimeout(() => { window.location.href = '/dashboard'; }, 1200);
                 }
             } catch (err) {
                 window.location.href = '/dashboard';

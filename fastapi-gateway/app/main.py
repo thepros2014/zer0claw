@@ -85,6 +85,16 @@ async def save_merchant_setup(config: Dict[str, Any]):
     return {"status": "success", "message": "Merchant configuration saved successfully!"}
 
 
+@app.post("/api/v1/auth/verify-pin", tags=["Auth"])
+async def verify_admin_pin(payload: Dict[str, Any]):
+    """Verifies the 6-Digit Admin Security PIN for privileged operations."""
+    pin = payload.get("pin", "")
+    # Default Admin PIN is 123456
+    is_valid = (pin == "123456")
+    logger.info({"event": "pin_verification", "valid": is_valid})
+    return {"valid": is_valid}
+
+
 @app.get("/api/v1/dashboard/stats", tags=["Dashboard"])
 async def get_dashboard_stats():
     """Returns live stats and revenue metrics for the Merchant Dashboard."""
