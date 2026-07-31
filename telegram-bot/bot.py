@@ -14,6 +14,8 @@ from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
     ContextTypes,
+    MessageHandler,
+    filters,
 )
 from telegram.constants import ParseMode
 
@@ -259,6 +261,64 @@ async def fn_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(help_text, parse_mode=ParseMode.HTML)
 
 
+async def fn_conversational_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Direct Conversational AI Cashier Handler for buyer-side natural language chat."""
+    user_msg = update.message.text.strip()
+    user_msg_lower = user_msg.lower()
+    
+    # 1. Product Matcher / Auto Checkout
+    matched_sku = None
+    if any(w in user_msg_lower for w in ["ebook", "book", "pdf", "solana dev", "solana course"]):
+        matched_sku = "SKU_EBOOK_PDF"
+    elif any(w in user_msg_lower for w in ["api", "key", "license", "saas"]):
+        matched_sku = "SKU_SAAS_KEY"
+    elif any(w in user_msg_lower for w in ["vip", "mastermind", "pass", "community", "discord"]):
+        matched_sku = "SKU_COMMUNITY_PASS"
+
+    if matched_sku:
+        context.args = [matched_sku]
+        product = CATALOG[matched_sku]
+        await update.message.reply_text(
+            f"🤖 <b>AI Cashier Assistant:</b> I'd be happy to help you purchase <b>{product['name']}</b>!\n"
+            f"Generating your secure Solana Pay invoice now...",
+            parse_mode=ParseMode.HTML,
+        )
+        await fn_buy(update, context)
+        return
+
+    # 2. Catalog / Store Inquiry
+    if any(w in user_msg_lower for w in ["catalog", "product", "sell", "buy", "store", "item", "available", "what do you have"]):
+        await update.message.reply_text(
+            "🤖 <b>AI Cashier Assistant:</b> Welcome! Here is our current digital goods catalog:\n\n"
+            "• <b>Mastering Solana Dev (eBook PDF)</b> — 25.0 USDC\n"
+            "• <b>Merchant API License Key</b> — 49.0 USDC\n"
+            "• <b>VIP Mastermind Access Pass</b> — 0.5 SOL\n\n"
+            "Simply tell me which item you'd like (e.g. <i>'I want to buy the eBook'</i>) or type <code>/buy &lt;SKU&gt;</code>!",
+            parse_mode=ParseMode.HTML,
+        )
+        return
+
+    # 3. Payment Verification Inquiry
+    if any(w in user_msg_lower for w in ["verify", "signature", "paid", "confirm"]):
+        await update.message.reply_text(
+            "🤖 <b>AI Cashier Assistant:</b> To confirm your payment and receive your digital item token, run:\n"
+            "<code>/verify &lt;invoice_id&gt; &lt;YOUR_TX_SIGNATURE&gt;</code>",
+            parse_mode=ParseMode.HTML,
+        )
+        return
+
+    # 4. General Conversational Assistant
+    reply_text = (
+        f"🤖 <b>AI Cashier Assistant:</b> Hello! I am your autonomous AI Store Cashier.\n\n"
+        f"I can help you purchase digital goods with <b>Tier 1 Zero-Key Solana Pay</b> (using Phantom, Solflare, Backpack, or Ledger).\n\n"
+        f"💬 <b>You can ask me anything naturally!</b> Try saying:\n"
+        f"• <i>'Show me the store catalog'</i>\n"
+        f"• <i>'I want to buy the Solana dev ebook'</i>\n"
+        f"• <i>'How does payment work?'</i>"
+    )
+    await update.message.reply_text(reply_text, parse_mode=ParseMode.HTML)
+
+
 def main():
     """Starts the Telegram bot."""
     if TELEGRAM_BOT_TOKEN == "YOUR_TELEGRAM_BOT_TOKEN":
@@ -272,6 +332,7 @@ def main():
     app.add_handler(CommandHandler("buy", fn_buy))
     app.add_handler(CommandHandler("verify", fn_verify))
     app.add_handler(CommandHandler("help", fn_help))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, fn_conversational_chat))
 
     masked_token = f"{TELEGRAM_BOT_TOKEN[:3]}...{TELEGRAM_BOT_TOKEN[-3:]}" if len(TELEGRAM_BOT_TOKEN) > 6 else "******"
     logger.info(f"ZeroClaw Commerce Telegram Bot is running with token [{masked_token}]...")

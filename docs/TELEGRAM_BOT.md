@@ -16,15 +16,22 @@
    MERCHANT_WALLET="DestWallet11111111111111111111111111111111"
    ```
 
-### 2. Available Commands
+### 2. Direct Conversational AI Chat (Buyer-Side Interaction) 💬
+Buyers can send natural text messages directly to the bot without typing slash commands:
+- *"Hi, what do you sell?"* -> Bot presents current catalog and prices.
+- *"I want to buy the eBook"* -> Bot identifies product and generates Solana Pay invoice + QR code image + multi-wallet links automatically.
+- *"How does payment work?"* -> Bot explains zero-key Solana Pay and accepted mobile wallets.
+
+### 3. Available Commands
 - `/start` - Welcome message & bot overview.
 - `/catalog` - View template storefront catalog.
 - `/buy <SKU>` - Generate a zero-key Solana Pay invoice.
 - `/verify <invoice_id> <signature>` - Verify payment on-chain & claim digital license key.
 - `/help` - Security architecture & Tier 1 zero-key custody model explanation.
 
-### 3. Multi-Wallet Options Rendered
-- 🟣 Phantom Wallet
-- 🟠 Solflare Wallet
-- 🎒 Backpack Wallet
+### 4. Multi-Wallet & QR Code Options Rendered
+- 📷 High-resolution Solana Pay QR Code Image
+- 🟣 Phantom Wallet Deep Link
+- 🟠 Solflare Wallet Deep Link
+- 🎒 Backpack Wallet Deep Link
 - Raw `solana:` payload for Ledger & Exodus.
