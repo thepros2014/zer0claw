@@ -333,6 +333,8 @@ async def fn_feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def fn_conversational_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Direct Conversational AI Cashier Handler for buyer-side natural language chat."""
+    if not update or not update.message or not update.message.text:
+        return
     user_msg = update.message.text.strip()
     user_msg_lower = user_msg.lower()
     
