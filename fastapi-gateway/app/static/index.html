@@ -425,7 +425,7 @@
         function openQrModal(itemName, amount, symbol) {
             document.getElementById('qr-item-name').innerText = itemName;
             document.getElementById('qr-item-price').innerText = `${amount} ${symbol}`;
-            const solanaPayPayload = `solana:DestWallet11111111111111111111111111111111?amount=${amount}&label=ZeroClaw%20Commerce&message=Purchase%20${encodeURIComponent(itemName)}`;
+            const solanaPayPayload = `solana:FWuAvPKkLxzG47Rygu19NAHLNjUt3y65xyH3NHBwKZUM?amount=${amount}&label=ZeroClaw%20Commerce&message=Purchase%20${encodeURIComponent(itemName)}`;
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(solanaPayPayload)}`;
             document.getElementById('qr-img').src = qrUrl;
             document.getElementById('qr-modal').style.display = 'flex';

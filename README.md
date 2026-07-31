@@ -130,6 +130,6 @@ This framework explicitly operates in **Tier 1 Zero-Key Custody**. The LLM and s
 If you find ZeroClaw Commerce valuable for your storefront, business, or agent workflows, please consider supporting open-source development!
 
 - **💖 GitHub Sponsors**: [Sponsor `@thepros2014` on GitHub](https://github.com/sponsors/thepros2014)
-- **⚡ Solana Wallet (SOL / USDC Tips)**: `DestWallet11111111111111111111111111111111`
+- **⚡ Solana Wallet (SOL / USDC Tips)**: `FWuAvPKkLxzG47Rygu19NAHLNjUt3y65xyH3NHBwKZUM`
 - **⭐ Star the Repo**: Show your support by giving us a star on [GitHub](https://github.com/thepros2014/zer0claw)!
 
