@@ -311,55 +311,91 @@ async def fn_conversational_chat(update: Update, context: ContextTypes.DEFAULT_T
     user_msg = update.message.text.strip()
     user_msg_lower = user_msg.lower()
     
-    # 1. Product Matcher / Auto Checkout
+    # 1. Natural Language Product Matcher & Auto Checkout
     matched_sku = None
-    if any(w in user_msg_lower for w in ["ebook", "book", "pdf", "solana dev", "solana course"]):
+    if any(w in user_msg_lower for w in ["ebook", "book", "pdf", "solana dev", "solana course", "rust", "tutorial", "guide"]):
         matched_sku = "SKU_EBOOK_PDF"
-    elif any(w in user_msg_lower for w in ["api", "key", "license", "saas"]):
+    elif any(w in user_msg_lower for w in ["api", "key", "license", "saas", "developer key", "integration"]):
         matched_sku = "SKU_SAAS_KEY"
-    elif any(w in user_msg_lower for w in ["vip", "mastermind", "pass", "community", "discord"]):
+    elif any(w in user_msg_lower for w in ["vip", "mastermind", "pass", "community", "discord", "access", "membership"]):
         matched_sku = "SKU_COMMUNITY_PASS"
 
     if matched_sku:
         context.args = [matched_sku]
         product = CATALOG[matched_sku]
+        symbol = "USDC" if product["crypto_symbol"] == "usd-coin" else "SOL"
         await update.message.reply_text(
-            f"🤖 <b>AI Cashier Assistant:</b> I'd be happy to help you purchase <b>{product['name']}</b>!\n"
-            f"Generating your secure Solana Pay invoice now...",
+            f"🤖 <b>AI Store Cashier:</b> Absolutely! I can help you purchase <b>{product['name']}</b> ({product['amount_crypto']} {symbol}).\n\n"
+            f"<i>{product['description']}</i>\n\n"
+            f"Generating your zero-key Solana Pay invoice and QR Code...",
             parse_mode=ParseMode.HTML,
         )
         await fn_buy(update, context)
         return
 
-    # 2. Catalog / Store Inquiry
-    if any(w in user_msg_lower for w in ["catalog", "product", "sell", "buy", "store", "item", "available", "what do you have"]):
+    # 2. Natural Feedback / Concern Submission
+    if any(w in user_msg_lower for w in ["feedback", "concern", "issue", "problem", "review", "complaint", "owner", "admin"]):
+        context.args = user_msg.split()
+        await fn_feedback(update, context)
+        return
+
+    # 3. Discount / Pricing Inquiry
+    if any(w in user_msg_lower for w in ["discount", "cheap", "price", "cost", "how much", "deal", "offer", "usd", "usdc", "sol"]):
         await update.message.reply_text(
-            "🤖 <b>AI Cashier Assistant:</b> Welcome! Here is our current digital goods catalog:\n\n"
-            "• <b>Mastering Solana Dev (eBook PDF)</b> — 25.0 USDC\n"
-            "• <b>Merchant API License Key</b> — 49.0 USDC\n"
-            "• <b>VIP Mastermind Access Pass</b> — 0.5 SOL\n\n"
-            "Simply tell me which item you'd like (e.g. <i>'I want to buy the eBook'</i>) or type <code>/buy &lt;SKU&gt;</code>!",
+            "🤖 <b>AI Store Cashier:</b> Here is our store pricing catalog:\n\n"
+            "• <b>Mastering Solana Dev (eBook PDF)</b> — <code>25.0 USDC</code>\n"
+            "• <b>Merchant API License Key</b> — <code>49.0 USDC</code>\n"
+            "• <b>VIP Mastermind Access Pass</b> — <code>0.5 SOL</code>\n\n"
+            "Prices are fixed in USDC & SOL on-chain. To purchase, just say <i>'I want the eBook'</i> or <i>'Buy API key'</i>!",
             parse_mode=ParseMode.HTML,
         )
         return
 
-    # 3. Payment Verification Inquiry
-    if any(w in user_msg_lower for w in ["verify", "signature", "paid", "confirm"]):
+    # 4. Payment Method & Wallet Safety Inquiry
+    if any(w in user_msg_lower for w in ["how to pay", "how do i pay", "wallet", "phantom", "solflare", "backpack", "coinbase", "trust", "exodus", "safe", "secure", "privacy"]):
         await update.message.reply_text(
-            "🤖 <b>AI Cashier Assistant:</b> To confirm your payment and receive your digital item token, run:\n"
+            "🤖 <b>AI Store Cashier:</b> Paying is instant & 100% safe!\n\n"
+            "• <b>Zero-Key Custody:</b> We never hold or request your private keys.\n"
+            "• <b>100% Wallet Compatible:</b> Scan our QR code or tap your wallet (Phantom, Solflare, Backpack, Coinbase, Trust Wallet, Exodus, Ledger, etc.).\n"
+            "• <b>Instant Settlement:</b> Verified on the Solana blockchain in under 2 seconds.\n\n"
+            "Say <i>'Show catalog'</i> or <i>'I want to buy...'</i> to get started!",
+            parse_mode=ParseMode.HTML,
+        )
+        return
+
+    # 5. Order Support / Verification Inquiry
+    if any(w in user_msg_lower for w in ["verify", "signature", "paid", "confirm", "receipt", "where is my item", "token"]):
+        await update.message.reply_text(
+            "🤖 <b>AI Store Cashier:</b> Got your transaction signature?\n\n"
+            "To verify your payment on-chain and claim your digital asset token, type:\n"
             "<code>/verify &lt;invoice_id&gt; &lt;YOUR_TX_SIGNATURE&gt;</code>",
             parse_mode=ParseMode.HTML,
         )
         return
 
-    # 4. General Conversational Assistant
+    # 6. Catalog / Store Inquiry
+    if any(w in user_msg_lower for w in ["catalog", "product", "sell", "buy", "store", "item", "available", "what do you have", "hello", "hi", "hey"]):
+        await update.message.reply_text(
+            "🤖 <b>AI Store Cashier:</b> Hello! Welcome to our store.\n\n"
+            "Here are our available digital goods:\n"
+            "1. <b>Mastering Solana Dev (eBook PDF)</b> — 25.0 USDC\n"
+            "2. <b>Merchant API License Key</b> — 49.0 USDC\n"
+            "3. <b>VIP Mastermind Access Pass</b> — 0.5 SOL\n\n"
+            "💬 You can talk to me naturally! Try saying:\n"
+            "• <i>'I want to buy the eBook'</i>\n"
+            "• <i>'Can I get an API key?'</i>\n"
+            "• <i>'How does payment work?'</i>",
+            parse_mode=ParseMode.HTML,
+        )
+        return
+
+    # 7. Intelligent Fallback Assistant
     reply_text = (
-        f"🤖 <b>AI Cashier Assistant:</b> Hello! I am your autonomous AI Store Cashier.\n\n"
-        f"I can help you purchase digital goods with <b>Tier 1 Zero-Key Solana Pay</b> (using Phantom, Solflare, Backpack, or Ledger).\n\n"
-        f"💬 <b>You can ask me anything naturally!</b> Try saying:\n"
-        f"• <i>'Show me the store catalog'</i>\n"
-        f"• <i>'I want to buy the Solana dev ebook'</i>\n"
-        f"• <i>'How does payment work?'</i>"
+        f"🤖 <b>AI Store Cashier:</b> I understood your message: <i>\"{user_msg}\"</i>\n\n"
+        f"I am your store cashier! Here is how I can assist you:\n"
+        f"• Type or say <i>'catalog'</i> to view all products.\n"
+        f"• Mention any item (e.g. <i>'eBook'</i>, <i>'API Key'</i>, <i>'VIP Pass'</i>) to generate a Solana Pay QR invoice instantly.\n"
+        f"• Send feedback to the store owner using <code>/feedback &lt;message&gt;</code>."
     )
     await update.message.reply_text(reply_text, parse_mode=ParseMode.HTML)
 
