@@ -22,7 +22,10 @@ cd ..
 
 timeout /t 3 >nul
 
-if exist "fastapi-gateway\config.json" (
+if exist "config.json" (
+    echo [INFO] Existing Setup Detected — Opening Merchant Dashboard...
+    start http://127.0.0.1:8000/dashboard
+) else if exist "fastapi-gateway\config.json" (
     echo [INFO] Existing Setup Detected — Opening Merchant Dashboard...
     start http://127.0.0.1:8000/dashboard
 ) else (

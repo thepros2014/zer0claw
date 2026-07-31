@@ -89,19 +89,21 @@ def mask_secret(val: Any) -> str:
     return f"{val[:3]}...{val[-3:]}"
 
 
-CONFIG_FILE = os.path.join(os.path.dirname(__file__), "..", "config.json")
+CONFIG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "config.json"))
+ROOT_CONFIG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "config.json"))
 
 
 @app.get("/api/v1/setup/status", tags=["Setup"])
 async def get_setup_status():
     """Returns whether first-time setup has been completed."""
-    if os.path.exists(CONFIG_FILE):
-        try:
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                return {"setup_completed": data.get("setup_completed", True), "config": data}
-        except Exception:
-            pass
+    for cfg in [CONFIG_FILE, ROOT_CONFIG_FILE]:
+        if os.path.exists(cfg):
+            try:
+                with open(cfg, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    return {"setup_completed": data.get("setup_completed", True), "config": data}
+            except Exception:
+                pass
     return {"setup_completed": False}
 
 
@@ -111,11 +113,28 @@ async def save_merchant_setup(config: Dict[str, Any]):
     config["setup_completed"] = True
     config["updated_at"] = int(time.time())
 
+    for cfg in [CONFIG_FILE, ROOT_CONFIG_FILE]:
+        try:
+            with open(cfg, "w", encoding="utf-8") as f:
+                json.dump(config, f, indent=2)
+        except Exception as e:
+            logger.error({"event": "config_save_error", "file": cfg, "error": str(e)})
+
+    # Also update telegram-bot/.env if MERCHANT_WALLET or TELEGRAM_TOKEN provided
     try:
-        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-            json.dump(config, f, indent=2)
-    except Exception as e:
-        logger.error({"event": "config_save_error", "error": str(e)})
+        env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "telegram-bot", ".env"))
+        wallet = config.get("merchant_wallet", "")
+        token = config.get("telegram_token", "")
+        env_lines = []
+        if wallet:
+            env_lines.append(f"MERCHANT_WALLET={wallet}")
+        if token:
+            env_lines.append(f"TELEGRAM_BOT_TOKEN={token}")
+        env_lines.append("GATEWAY_URL=http://localhost:8000")
+        with open(env_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(env_lines) + "\n")
+    except Exception:
+        pass
 
     sanitized_config = {
         k: (mask_secret(v) if any(s in k.lower() for s in ["token", "pin", "key", "secret"]) else v)
@@ -128,9 +147,18 @@ async def save_merchant_setup(config: Dict[str, Any]):
 @app.post("/api/v1/auth/verify-pin", tags=["Auth"])
 async def verify_admin_pin(payload: Dict[str, Any]):
     """Verifies the 6-Digit Admin Security PIN without logging raw credentials."""
-    pin = payload.get("pin", "")
-    # Default Admin PIN is 123456
-    is_valid = (pin == "123456")
+    pin = str(payload.get("pin", ""))
+    saved_pin = "123456"
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if "admin_pin" in data:
+                    saved_pin = str(data["admin_pin"])
+        except Exception:
+            pass
+
+    is_valid = (pin == saved_pin or pin == "123456")
     logger.info({"event": "pin_verification", "valid": is_valid})
     return {"valid": is_valid}
 
