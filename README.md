@@ -35,6 +35,7 @@ ZeroClaw Commerce provides `wasm32-wasip2` plugins, an async FastAPI Gateway, mu
 zer0claw/
 ├── docs/                       <-- Consolidated Documentation
 │   ├── SUBMISSION.md           <-- Official Superteam Bounty Submission
+│   ├── ROADMAP_FUTURES.md      <-- Master 5-Year Futures Plan & TODO Roadmap (2026-2030)
 │   ├── ARCHITECTURE.md         <-- Technical Architecture & 6-Layer Security
 │   ├── VISION.md               <-- Strategic Roadmap & Enterprise Vision
 │   ├── TELEGRAM_BOT.md         <-- Telegram Storefront Setup & NLU Commands
@@ -115,6 +116,7 @@ This framework explicitly operates in **Tier 1 Zero-Key Custody**. The LLM and s
 ## 📚 Documentation Index (`docs/`)
 
 - **[🏆 SUBMISSION.md](./docs/SUBMISSION.md)**: Official Superteam Bounty Submission Breakdown & Rubric Alignment.
+- **[🚀 ROADMAP_FUTURES.md](./docs/ROADMAP_FUTURES.md)**: Master 5-Year Futures Plan, Feature TODO List & Multi-Year Vision (2026-2030).
 - **[🛡️ ARCHITECTURE.md](./docs/ARCHITECTURE.md)**: Technical Architecture, WASM Plugins, & 6-Layer Security Model.
 - **[🔮 VISION.md](./docs/VISION.md)**: Strategic Expansion Roadmap & Institutional Squads Multisig Bridge.
 - **[🤖 TELEGRAM_BOT.md](./docs/TELEGRAM_BOT.md)**: Telegram Storefront Bot Setup, Commands, & NLU Natural Chat.
