@@ -15,13 +15,20 @@ cd ..
 echo [2/3] Auto-provisioning Telegram, Discord, and WhatsApp bots...
 powershell -ExecutionPolicy Bypass -File .\install_bots.ps1
 
-echo [3/3] Launching Storefront Bots & Opening Setup Wizard...
+echo [3/3] Launching Storefront Bots & Opening Dashboard...
 cd telegram-bot
 start /b python bot.py
 cd ..
 
 timeout /t 3 >nul
-start http://127.0.0.1:8000/setup
+
+if exist "fastapi-gateway\config.json" (
+    echo [INFO] Existing Setup Detected — Opening Merchant Dashboard...
+    start http://127.0.0.1:8000/dashboard
+) else (
+    echo [INFO] First-Time Startup Detected — Opening Merchant Setup Wizard...
+    start http://127.0.0.1:8000/setup
+)
 
 echo.
 echo =========================================================================

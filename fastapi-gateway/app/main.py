@@ -1,4 +1,5 @@
 import hashlib
+import json
 import logging
 import time
 import uuid
@@ -88,9 +89,34 @@ def mask_secret(val: Any) -> str:
     return f"{val[:3]}...{val[-3:]}"
 
 
+CONFIG_FILE = os.path.join(os.path.dirname(__file__), "..", "config.json")
+
+
+@app.get("/api/v1/setup/status", tags=["Setup"])
+async def get_setup_status():
+    """Returns whether first-time setup has been completed."""
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return {"setup_completed": data.get("setup_completed", True), "config": data}
+        except Exception:
+            pass
+    return {"setup_completed": False}
+
+
 @app.post("/api/v1/setup/save", tags=["Setup"])
 async def save_merchant_setup(config: Dict[str, Any]):
-    """Saves merchant setup configuration and initializes environment safely without logging raw secrets."""
+    """Saves merchant setup configuration to disk and initializes environment safely without logging raw secrets."""
+    config["setup_completed"] = True
+    config["updated_at"] = int(time.time())
+
+    try:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(config, f, indent=2)
+    except Exception as e:
+        logger.error({"event": "config_save_error", "error": str(e)})
+
     sanitized_config = {
         k: (mask_secret(v) if any(s in k.lower() for s in ["token", "pin", "key", "secret"]) else v)
         for k, v in config.items()

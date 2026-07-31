@@ -192,6 +192,18 @@
     </div>
 
     <script>
+        // Auto-fill existing config if available
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/api/v1/setup/status');
+                const data = await res.json();
+                if (data.config) {
+                    if (data.config.store_name) document.getElementById('store_name').value = data.config.store_name;
+                    if (data.config.merchant_wallet) document.getElementById('merchant_wallet').value = data.config.merchant_wallet;
+                }
+            } catch (e) {}
+        });
+
         function toggleChannel(ch) {
             const mode = document.getElementById(`mode_${ch}`).value;
             document.getElementById(`fields_${ch}`).style.display = (mode === 'configure') ? 'block' : 'none';
@@ -217,11 +229,13 @@
                     body: JSON.stringify(payload)
                 });
                 if (res.ok) {
+                    localStorage.setItem('setup_completed', 'true');
                     document.getElementById('setup-form').style.display = 'none';
                     document.getElementById('success-alert').style.display = 'block';
                     setTimeout(() => { window.location.href = '/dashboard'; }, 1200);
                 }
             } catch (err) {
+                localStorage.setItem('setup_completed', 'true');
                 window.location.href = '/dashboard';
             }
         });
