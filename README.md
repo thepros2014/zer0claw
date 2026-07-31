@@ -131,5 +131,11 @@ If you find ZeroClaw Commerce valuable for your storefront, business, or agent w
 
 - **💖 GitHub Sponsors**: [Sponsor `@thepros2014` on GitHub](https://github.com/sponsors/thepros2014)
 - **⚡ Solana Wallet (SOL / USDC Tips)**: `FWuAvPKkLxzG47Rygu19NAHLNjUt3y65xyH3NHBwKZUM`
+- **⚡ BTC / Bitcoin Lightning QR Code**: Scan QR Code below to tip via Bitcoin/Lightning!
+
+<p align="left">
+  <img src="docs/assets/btc_lightning_qr.png" alt="Bitcoin Lightning Sponsor QR Code" width="220" style="border-radius:12px;" />
+</p>
+
 - **⭐ Star the Repo**: Show your support by giving us a star on [GitHub](https://github.com/thepros2014/zer0claw)!
 
