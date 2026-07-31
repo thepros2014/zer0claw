@@ -302,7 +302,10 @@
                 <!-- Private Merchant Inbox Panel -->
                 <div class="panel">
                     <div class="panel-header">
-                        <div class="panel-title">📬 Private Merchant Inbox</div>
+                        <div class="panel-title">
+                            📬 Private Merchant Inbox
+                            <div class="pulse-dot" style="margin-left: 0.25rem;" title="Live Real-Time Sync (5s)"></div>
+                        </div>
                         <button class="btn btn-outline" style="font-size:0.75rem;" onclick="fetchFeedback()">🔄 Refresh</button>
                     </div>
                     <div id="merchant-feedback-list">
@@ -561,6 +564,10 @@
                 console.log('Feedback fetch error:', e);
             }
         }
+
+        // Live Real-Time Auto-Polling (Every 5 seconds)
+        fetchFeedback();
+        setInterval(fetchFeedback, 5000);
 
         function exportCSV() {
             const csvContent = "data:text/csv;charset=utf-8,Invoice_ID,Timestamp,Channel,Amount_USD,Amount_BRL,Receipt_Signature\n" +
