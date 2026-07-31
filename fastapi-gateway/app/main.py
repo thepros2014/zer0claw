@@ -47,6 +47,7 @@ solana_client = SolanaCommerceClient()
 # In-memory stores (demo / gateway integration)
 INVOICE_STORE: Dict[str, Dict[str, Any]] = {}
 VERIFIED_SIGNATURES: Set[str] = set()
+FEEDBACK_STORE: Dict[str, Dict[str, Any]] = {}
 
 
 @app.get("/health", tags=["Health"])
@@ -106,6 +107,50 @@ async def verify_admin_pin(payload: Dict[str, Any]):
     is_valid = (pin == "123456")
     logger.info({"event": "pin_verification", "valid": is_valid})
     return {"valid": is_valid}
+
+
+@app.post("/api/v1/feedback/submit", tags=["Feedback"])
+async def submit_customer_feedback(payload: Dict[str, Any]):
+    """Submits buyer feedback/concerns to the private merchant inbox."""
+    feedback_id = f"fb_{uuid.uuid4().hex[:8]}"
+    item = {
+        "id": feedback_id,
+        "customer_id": payload.get("customer_id", "Anonymous"),
+        "channel": payload.get("channel", "telegram"),
+        "message": payload.get("message", ""),
+        "timestamp": int(time.time()),
+        "status": "unread",
+    }
+    FEEDBACK_STORE[feedback_id] = item
+    logger.info({"event": "customer_feedback_received", "feedback_id": feedback_id})
+    return {"status": "success", "feedback_id": feedback_id}
+
+
+@app.get("/api/v1/feedback/list", tags=["Feedback"])
+async def list_customer_feedback():
+    """Returns all customer feedback and concerns for the merchant dashboard inbox."""
+    items = list(FEEDBACK_STORE.values())
+    if not items:
+        # Provide sample feedback items for initial demo display
+        items = [
+            {
+                "id": "fb_101",
+                "customer_id": "user_9872",
+                "channel": "Telegram",
+                "message": "Loved the instant Solana Pay checkout! Delivered token in 2 seconds.",
+                "timestamp": int(time.time()) - 3600,
+                "status": "unread",
+            },
+            {
+                "id": "fb_102",
+                "customer_id": "user_4412",
+                "channel": "WhatsApp",
+                "message": "Is there a discount for bulk API license purchases?",
+                "timestamp": int(time.time()) - 7200,
+                "status": "unread",
+            },
+        ]
+    return {"items": items}
 
 
 @app.get("/api/v1/dashboard/stats", tags=["Dashboard"])

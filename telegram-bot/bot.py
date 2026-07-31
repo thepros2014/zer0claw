@@ -244,7 +244,11 @@ async def fn_verify(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     f"Receita Federal Accounting: <b>R${v_data['amount_brl']:.2f} BRL</b>\n"
                     f"Receipt Hash: <code>{v_data['receipt_signature'][:16]}...</code>\n\n"
                     f"🔑 <b>Your Digital Fulfillment Token:</b>\n"
-                    f"<code>{f_data['fulfillment_token']}</code>"
+                    f"<code>{f_data['fulfillment_token']}</code>\n\n"
+                    f"💬 <b>Store Owner Feedback:</b>\n"
+                    f"How was your checkout experience? Reply here or type:\n"
+                    f"<code>/feedback &lt;your message or concern&gt;</code>\n"
+                    f"<i>(Your note will be sent directly to the owner's Private Dashboard Inbox!)</i>"
                 )
                 await update.message.reply_text(success_msg, parse_mode=ParseMode.HTML)
             else:
@@ -266,6 +270,40 @@ async def fn_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• <b>Replay Protection:</b> On-chain transaction signatures are uniquely verified."
     )
     await update.message.reply_text(help_text, parse_mode=ParseMode.HTML)
+
+
+async def fn_feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler for /feedback <message> command."""
+    if not context.args:
+        await update.message.reply_text(
+            "⚠️ Please include a feedback message or concern.\n"
+            "Example: <code>/feedback Great service! Instant token delivery.</code>",
+            parse_mode=ParseMode.HTML,
+        )
+        return
+
+    msg = " ".join(context.args)
+    user_id = f"user_{update.effective_user.id}"
+
+    payload = {
+        "customer_id": user_id,
+        "channel": "Telegram",
+        "message": msg,
+    }
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        try:
+            resp = await client.post(f"{GATEWAY_URL}/api/v1/feedback/submit", json=payload)
+            if resp.status_code == 200:
+                await update.message.reply_text(
+                    "📬 <b>Thank you!</b> Your message has been sent directly to the store owner's Private Dashboard Inbox for review.",
+                    parse_mode=ParseMode.HTML,
+                )
+            else:
+                await update.message.reply_text("❌ Failed to submit feedback to store owner.")
+        except Exception as e:
+            logger.error(f"Error submitting feedback: {e}")
+            await update.message.reply_text("❌ Error contacting Gateway.")
 
 
 async def fn_conversational_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -338,6 +376,7 @@ def main():
     app.add_handler(CommandHandler("catalog", fn_catalog))
     app.add_handler(CommandHandler("buy", fn_buy))
     app.add_handler(CommandHandler("verify", fn_verify))
+    app.add_handler(CommandHandler("feedback", fn_feedback))
     app.add_handler(CommandHandler("help", fn_help))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, fn_conversational_chat))
 
