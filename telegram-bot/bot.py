@@ -138,6 +138,8 @@ async def fn_buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 phantom_link = f"https://phantom.app/ul/browse/{encoded_url}?ref=zeroclaw"
                 solflare_link = f"https://solflare.com/ul/v1/browse/{encoded_url}?ref=zeroclaw"
                 backpack_link = f"https://backpack.app/ul/browse/{encoded_url}?ref=zeroclaw"
+                coinbase_link = f"https://go.cb-w.com/browse/{encoded_url}"
+                trust_link = f"https://link.trustwallet.com/open_url?coin_id=501&url={encoded_url}"
                 qr_code_url = f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={encoded_url}"
 
                 msg = (
@@ -146,11 +148,12 @@ async def fn_buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     f"Amount Due: <b>{product['amount_crypto']} {symbol}</b>\n"
                     f"Expires in: <b>15 minutes</b>\n\n"
                     f"📷 <b>Scan the QR Code image above with your phone camera or mobile wallet!</b>\n\n"
-                    f"📱 <b>Solana Pay Payload:</b>\n"
-                    f"<code>{solana_pay_url}</code>\n\n"
-                    f"<b>Or Select Your Mobile Wallet Below:</b>\n"
-                    f"1. Tap Phantom, Solflare, or Backpack below.\n"
-                    f"2. Authorize the transaction in your wallet.\n"
+                    f"🌐 <b>Universal Solana Pay Payload (Supports 100% of Wallets):</b>\n"
+                    f"<code>{solana_pay_url}</code>\n"
+                    f"<i>(Works with Exodus, Ultimate, Brave, OKX, MathWallet, Ledger & ALL Solana wallets)</i>\n\n"
+                    f"<b>Or Tap Your Wallet Below:</b>\n"
+                    f"1. Tap your wallet button below.\n"
+                    f"2. Authorize payment in your mobile wallet.\n"
                     f"3. Copy your transaction signature and run:\n"
                     f"<code>/verify {invoice_id} &lt;YOUR_TX_SIGNATURE&gt;</code>"
                 )
@@ -161,7 +164,11 @@ async def fn_buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         InlineKeyboardButton("🟠 Solflare", url=solflare_link),
                     ],
                     [
-                        InlineKeyboardButton("🎒 Backpack Wallet", url=backpack_link),
+                        InlineKeyboardButton("🎒 Backpack", url=backpack_link),
+                        InlineKeyboardButton("🔵 Coinbase", url=coinbase_link),
+                    ],
+                    [
+                        InlineKeyboardButton("🛡️ Trust Wallet", url=trust_link),
                     ],
                 ]
                 reply_markup = InlineKeyboardMarkup(keyboard)

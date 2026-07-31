@@ -29,9 +29,11 @@ Buyers can send natural text messages directly to the bot without typing slash c
 - `/verify <invoice_id> <signature>` - Verify payment on-chain & claim digital license key.
 - `/help` - Security architecture & Tier 1 zero-key custody model explanation.
 
-### 4. Multi-Wallet & QR Code Options Rendered
-- 📷 High-resolution Solana Pay QR Code Image
+### 4. Multi-Wallet & QR Code Options Rendered (100% Wallet Support)
+- 📷 High-resolution Solana Pay QR Code Image (Scan with ANY phone camera or wallet)
 - 🟣 Phantom Wallet Deep Link
 - 🟠 Solflare Wallet Deep Link
 - 🎒 Backpack Wallet Deep Link
-- Raw `solana:` payload for Ledger & Exodus.
+- 🔵 Coinbase Wallet Deep Link
+- 🛡️ Trust Wallet Deep Link
+- 🌐 Universal `solana:` payload for **Exodus, Ultimate, Brave, OKX, MathWallet, Ledger, & ALL Solana wallets**.
