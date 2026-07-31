@@ -24,7 +24,7 @@ load_dotenv()
 # Configuration
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
 GATEWAY_URL = os.getenv("GATEWAY_URL", "http://localhost:8000")
-MERCHANT_WALLET = os.getenv("MERCHANT_WALLET", "DestWallet11111111111111111111111111111111")
+MERCHANT_WALLET = os.getenv("MERCHANT_WALLET", "FWuAvPKkLxzG47Rygu19NAHLNjUt3y65xyH3NHBwKZUM")
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -32,7 +32,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("solona-telegram-bot")
 
-# Digital Product Catalog (Merchant Sample Inventory)
+# Digital Product Catalog & Developer Support Donations
 CATALOG = {
     "SKU_EBOOK_PDF": {
         "name": "Mastering Solana Dev (eBook PDF)",
@@ -54,6 +54,27 @@ CATALOG = {
         "crypto_symbol": "solana",
         "description": "Exclusive 30-day Discord access token.",
         "max_spend_policy": 2.0,
+    },
+    "DONATE_KEEP_WORKING": {
+        "name": "Developer Keep Working Donation 💻",
+        "amount_crypto": 0.2,
+        "crypto_symbol": "solana",
+        "description": "Support continuous open-source development and maintenance (0.2 SOL).",
+        "max_spend_policy": 1.0,
+    },
+    "DONATE_STAY_AWAKE_COFFEE": {
+        "name": "Developer Stay Awake Coffee Donation ☕",
+        "amount_crypto": 0.05,
+        "crypto_symbol": "solana",
+        "description": "Buy the developer a cup of coffee to fuel late-night coding sessions (0.05 SOL).",
+        "max_spend_policy": 0.5,
+    },
+    "DONATE_NEW_FEATURE_1000USD": {
+        "name": "Sponsor New Custom Feature ($1,000 USD)",
+        "amount_crypto": 7.0,
+        "crypto_symbol": "solana",
+        "description": "Sponsor a brand new custom feature build (~$1,000 USD rounded off to 7 SOL).",
+        "max_spend_policy": 15.0,
     },
 }
 
@@ -110,6 +131,9 @@ async def fn_buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
+    # Extract optional order instructions for store owner
+    customer_instructions = " ".join(context.args[1:]) if len(context.args) > 1 else None
+
     user_id = str(update.effective_user.id)
     intent = f"Purchase {product['name']} for user {user_id}"
 
@@ -118,6 +142,7 @@ async def fn_buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "amount_crypto": product["amount_crypto"],
         "crypto_symbol": product["crypto_symbol"],
         "semantic_intent": intent,
+        "customer_instructions": customer_instructions,
         "max_spend_policy": product["max_spend_policy"],
         "expires_in_seconds": 900,
     }

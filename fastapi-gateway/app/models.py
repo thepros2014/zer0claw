@@ -49,6 +49,10 @@ class InvoiceCreateRequest(BaseModel):
         le=32,
         description="Minimum confirmation depth required for settlement.",
     )
+    customer_instructions: Optional[str] = Field(
+        None,
+        description="Optional customer instructions or notes for the store owner",
+    )
     expires_in_seconds: int = Field(
         900,
         ge=60,

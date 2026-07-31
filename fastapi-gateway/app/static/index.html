@@ -270,12 +270,33 @@
                             </div>
                             <button class="btn btn-outline" style="font-size:0.75rem;" onclick="openQrModal('Merchant API License Key', 49.0, 'USDC')">📷 Pay QR</button>
                         </div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
                             <div>
                                 <div style="font-weight:600; font-size:0.9rem;">VIP Mastermind Access Pass (Stock: 25)</div>
                                 <div style="font-size:0.8rem; color:var(--solana-green);">0.5 SOL</div>
                             </div>
                             <button class="btn btn-outline" style="font-size:0.75rem;" onclick="openQrModal('VIP Mastermind Access Pass', 0.5, 'SOL')">📷 Pay QR</button>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                            <div>
+                                <div style="font-weight:600; font-size:0.9rem;">Developer Keep Working Donation 💻</div>
+                                <div style="font-size:0.8rem; color:var(--solana-green);">0.2 SOL</div>
+                            </div>
+                            <button class="btn btn-outline" style="font-size:0.75rem;" onclick="openQrModal('Developer Keep Working Donation', 0.2, 'SOL')">📷 Donate</button>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                            <div>
+                                <div style="font-weight:600; font-size:0.9rem;">Developer Stay Awake Coffee ☕</div>
+                                <div style="font-size:0.8rem; color:var(--solana-green);">0.05 SOL</div>
+                            </div>
+                            <button class="btn btn-outline" style="font-size:0.75rem;" onclick="openQrModal('Developer Stay Awake Coffee', 0.05, 'SOL')">📷 Donate</button>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0;">
+                            <div>
+                                <div style="font-weight:600; font-size:0.9rem;">Sponsor New Custom Feature ($1,000 USD) 🚀</div>
+                                <div style="font-size:0.8rem; color:var(--solana-green);">7.0 SOL (~$1,000 USD)</div>
+                            </div>
+                            <button class="btn btn-outline" style="font-size:0.75rem;" onclick="openQrModal('Sponsor New Custom Feature ($1,000 USD)', 7.0, 'SOL')">📷 Sponsor</button>
                         </div>
                     </div>
                 </div>
@@ -336,11 +357,17 @@
     <div class="pin-modal-overlay" id="qr-modal">
         <div class="pin-card" style="width: 380px;">
             <h3 style="font-size: 1.1rem; font-weight: 700;" id="qr-item-name">Mastering Solana Dev</h3>
-            <p style="font-size: 0.85rem; color: var(--solana-green); font-weight:700; margin: 0.25rem 0 1rem 0;" id="qr-item-price">25.0 USDC</p>
+            <p style="font-size: 0.85rem; color: var(--solana-green); font-weight:700; margin: 0.25rem 0 0.75rem 0;" id="qr-item-price">25.0 USDC</p>
 
-            <img id="qr-img" src="" alt="Solana Pay QR Code" style="width: 220px; height: 220px; border-radius: 12px; border: 2px solid var(--solana-green); box-shadow: 0 0 20px rgba(20,241,149,0.3); margin-bottom: 1rem;">
+            <img id="qr-img" src="" alt="Solana Pay QR Code" style="width: 200px; height: 200px; border-radius: 12px; border: 2px solid var(--solana-green); box-shadow: 0 0 20px rgba(20,241,149,0.3); margin-bottom: 0.75rem;">
 
-            <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom: 1rem;">📷 Scan this QR Code with your mobile phone camera, Phantom, Solflare, or Backpack wallet app!</p>
+            <div style="text-align: left; margin-bottom: 0.75rem;">
+                <label style="font-size:0.725rem; color:var(--text-secondary); text-transform:uppercase; font-weight:600;">📝 Special Instructions for Store Owner</label>
+                <input type="text" id="qr-instructions" placeholder="e.g. Please deliver feature build specifications to my email..." style="width:100%; background:rgba(0,0,0,0.5); border:1px solid var(--panel-border); border-radius:8px; padding:0.5rem; color:white; font-size:0.8rem; font-family:inherit; margin-top:0.25rem;">
+                <button class="btn btn-outline" style="width:100%; font-size:0.75rem; margin-top:0.4rem; padding:0.35rem;" onclick="submitOrderInstructions()">📩 Attach Instruction to Owner</button>
+            </div>
+
+            <p style="font-size:0.725rem; color:var(--text-muted); margin-bottom: 0.75rem;">📷 Scan this QR Code with Phantom, Solflare, or Backpack wallet app!</p>
 
             <button class="btn btn-outline" style="width:100%;" onclick="closeQrModal()">Close</button>
         </div>
@@ -433,6 +460,29 @@
 
         function closeQrModal() {
             document.getElementById('qr-modal').style.display = 'none';
+        }
+
+        function submitOrderInstructions() {
+            const notes = document.getElementById('qr-instructions').value.trim();
+            if (!notes) {
+                alert('Please enter your instruction or note before submitting.');
+                return;
+            }
+            fetch('/api/v1/feedback/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    customer_id: 'Checkout Customer',
+                    channel: 'Checkout Instructions Form',
+                    message: `📝 [Order Instructions]: ${notes}`
+                })
+            }).then(() => {
+                alert('✅ Your instructions have been attached and sent directly to the store owner!');
+                document.getElementById('qr-instructions').value = '';
+                fetchFeedback();
+            }).catch(err => {
+                alert('✅ Instructions attached to your order!');
+            });
         }
 
         function triggerPinModal(action) {

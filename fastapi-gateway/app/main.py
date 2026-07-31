@@ -253,6 +253,7 @@ async def create_invoice(request: InvoiceCreateRequest):
             "amount_crypto": request.amount_crypto,
             "crypto_symbol": request.crypto_symbol.value,
             "semantic_intent": request.semantic_intent,
+            "customer_instructions": request.customer_instructions,
             "solana_pay_url": solana_pay_url,
             "created_at": created_at,
             "expires_at": expires_at,
@@ -264,6 +265,18 @@ async def create_invoice(request: InvoiceCreateRequest):
 
         INVOICE_STORE[invoice_id] = invoice_data
 
+        # If customer provided checkout instructions for the store owner, route to Feedback/Inbox store
+        if request.customer_instructions:
+            fb_id = f"fb_checkout_{invoice_id}"
+            FEEDBACK_STORE[fb_id] = {
+                "id": fb_id,
+                "customer_id": f"Invoice {invoice_id}",
+                "channel": "Checkout Note",
+                "message": f"📝 [Order Instruction]: {request.customer_instructions}",
+                "timestamp": created_at,
+                "status": "unread",
+            }
+
         logger.info(
             {
                 "event": "invoice_created",
@@ -272,6 +285,7 @@ async def create_invoice(request: InvoiceCreateRequest):
                 "amount_crypto": request.amount_crypto,
                 "crypto_symbol": request.crypto_symbol.value,
                 "semantic_intent": request.semantic_intent,
+                "customer_instructions": request.customer_instructions,
                 "reference": reference,
                 "expires_at": expires_at,
             }
