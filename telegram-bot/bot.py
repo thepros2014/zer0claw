@@ -69,12 +69,12 @@ CATALOG = {
         "description": "Buy the developer a cup of coffee to fuel late-night coding sessions (0.05 SOL).",
         "max_spend_policy": 0.5,
     },
-    "DONATE_NEW_FEATURE_1000USD": {
-        "name": "Sponsor New Custom Feature ($1,000 USD)",
-        "amount_crypto": 7.0,
+    "DONATE_NEW_FEATURE_5000USD": {
+        "name": "Sponsor New Custom Feature 🚀",
+        "amount_crypto": 33.0,
         "crypto_symbol": "solana",
-        "description": "Sponsor a brand new custom feature build (~$1,000 USD rounded off to 7 SOL).",
-        "max_spend_policy": 15.0,
+        "description": "Sponsor a brand new custom feature build (33.0 SOL).",
+        "max_spend_policy": 50.0,
     },
 }
 
