@@ -5,6 +5,7 @@
 ![Architecture](https://img.shields.io/badge/Architecture-wasm32--wasip2-orange)
 ![Release](https://img.shields.io/badge/Release-v1.1.0-green)
 ![License](https://img.shields.io/badge/License-MIT-green)
+[![Sponsor](https://img.shields.io/badge/Sponsor-GitHub-ea4aaa?logo=github-sponsors)](https://github.com/sponsors/thepros2014)
 
 Welcome to **ZeroClaw Commerce** — the zero-key payment, tax accounting, conversational AI cashier, and digital fulfillment platform for the ZeroClaw agent ecosystem.
 
@@ -121,3 +122,14 @@ This framework explicitly operates in **Tier 1 Zero-Key Custody**. The LLM and s
 - **[🔮 VISION.md](./docs/VISION.md)**: Strategic Expansion Roadmap & Institutional Squads Multisig Bridge.
 - **[🤖 TELEGRAM_BOT.md](./docs/TELEGRAM_BOT.md)**: Telegram Storefront Bot Setup, Commands, & NLU Natural Chat.
 - **[🌐 MULTI_CHANNEL.md](./docs/MULTI_CHANNEL.md)**: Discord Slash Commands & WhatsApp Cloud API Webhook Guide.
+
+---
+
+## 💖 Sponsor & Support ZeroClaw Commerce
+
+If you find ZeroClaw Commerce valuable for your storefront, business, or agent workflows, please consider supporting open-source development!
+
+- **💖 GitHub Sponsors**: [Sponsor `@thepros2014` on GitHub](https://github.com/sponsors/thepros2014)
+- **⚡ Solana Wallet (SOL / USDC Tips)**: `DestWallet11111111111111111111111111111111`
+- **⭐ Star the Repo**: Show your support by giving us a star on [GitHub](https://github.com/thepros2014/zer0claw)!
+
