@@ -31,3 +31,8 @@ models/
 *.sqlite3
 .cache/
 dist/
+
+# Merchant Configurations & Credentials (DO NOT COMMIT)
+config.json
+*/config.json
+*.json.secret
