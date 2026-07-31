@@ -346,13 +346,19 @@ async def fn_conversational_chat(update: Update, context: ContextTypes.DEFAULT_T
         matched_sku = "SKU_SAAS_KEY"
     elif any(w in user_msg_lower for w in ["vip", "mastermind", "pass", "community", "discord", "access", "membership"]):
         matched_sku = "SKU_COMMUNITY_PASS"
+    elif any(w in user_msg_lower for w in ["coffee", "awake", "buy coffee", "cup of coffee"]):
+        matched_sku = "DONATE_STAY_AWAKE_COFFEE"
+    elif any(w in user_msg_lower for w in ["keep working", "support dev", "donate", "donation", "dev support"]):
+        matched_sku = "DONATE_KEEP_WORKING"
+    elif any(w in user_msg_lower for w in ["feature", "sponsor", "custom feature", "build feature", "33 sol", "new feature"]):
+        matched_sku = "DONATE_NEW_FEATURE_5000USD"
 
     if matched_sku:
         context.args = [matched_sku]
         product = CATALOG[matched_sku]
         symbol = "USDC" if product["crypto_symbol"] == "usd-coin" else "SOL"
         await update.message.reply_text(
-            f"🤖 <b>AI Store Cashier:</b> Absolutely! I can help you purchase <b>{product['name']}</b> ({product['amount_crypto']} {symbol}).\n\n"
+            f"🤖 <b>AI Store Cashier:</b> Absolutely! I can help you process <b>{product['name']}</b> ({product['amount_crypto']} {symbol}).\n\n"
             f"<i>{product['description']}</i>\n\n"
             f"Generating your zero-key Solana Pay invoice and QR Code...",
             parse_mode=ParseMode.HTML,
@@ -369,11 +375,14 @@ async def fn_conversational_chat(update: Update, context: ContextTypes.DEFAULT_T
     # 3. Discount / Pricing Inquiry
     if any(w in user_msg_lower for w in ["discount", "cheap", "price", "cost", "how much", "deal", "offer", "usd", "usdc", "sol"]):
         await update.message.reply_text(
-            "🤖 <b>AI Store Cashier:</b> Here is our store pricing catalog:\n\n"
+            "🤖 <b>AI Store Cashier:</b> Here is our store pricing catalog & developer support options:\n\n"
             "• <b>Mastering Solana Dev (eBook PDF)</b> — <code>25.0 USDC</code>\n"
             "• <b>Merchant API License Key</b> — <code>49.0 USDC</code>\n"
-            "• <b>VIP Mastermind Access Pass</b> — <code>0.5 SOL</code>\n\n"
-            "Prices are fixed in USDC & SOL on-chain. To purchase, just say <i>'I want the eBook'</i> or <i>'Buy API key'</i>!",
+            "• <b>VIP Mastermind Access Pass</b> — <code>0.5 SOL</code>\n"
+            "• <b>Developer Keep Working Donation 💻</b> — <code>0.2 SOL</code>\n"
+            "• <b>Developer Stay Awake Coffee ☕</b> — <code>0.05 SOL</code>\n"
+            "• <b>Sponsor New Custom Feature 🚀</b> — <code>33.0 SOL</code>\n\n"
+            "To purchase or donate, just say <i>'Donate coffee'</i>, <i>'Keep working'</i>, or <i>'Sponsor new feature'</i>!",
             parse_mode=ParseMode.HTML,
         )
         return

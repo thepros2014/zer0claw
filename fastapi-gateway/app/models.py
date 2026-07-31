@@ -1,9 +1,9 @@
 """Pydantic V2 Models for Solona Commerce Gateway."""
 
 from enum import Enum
-from typing import Optional
+from typing import Optional, Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class TaxCategory(str, Enum):
@@ -34,6 +34,17 @@ class InvoiceCreateRequest(BaseModel):
         CryptoSymbol.USDC,
         description="Cryptocurrency identifier",
     )
+
+    @field_validator("crypto_symbol", mode="before")
+    @classmethod
+    def normalize_symbol(cls, v: Any) -> CryptoSymbol:
+        if isinstance(v, str):
+            v_lower = v.lower()
+            if v_lower in ["sol", "solana"]:
+                return CryptoSymbol.SOL
+            if v_lower in ["usdc", "usd-coin", "usd_coin"]:
+                return CryptoSymbol.USDC
+        return v
     semantic_intent: str = Field(
         ...,
         description="Human-readable reason for the payment (Semantic Receipt)",
