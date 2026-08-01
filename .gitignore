@@ -11,6 +11,8 @@ __pycache__/
 *.pyo
 *.pyd
 .pytest_cache/
+.coverage
+htmlcov/
 
 # Environment Variables & Secrets
 .env
@@ -23,6 +25,16 @@ desktop.ini
 Thumbs.db
 .DS_Store
 
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
 # Data & Database Files
 models/
 *.gguf
@@ -31,6 +43,9 @@ models/
 *.sqlite3
 .cache/
 dist/
+build/
+*.egg-info/
+*.session
 
 # Merchant Configurations & Credentials (DO NOT COMMIT)
 config.json
