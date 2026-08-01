@@ -180,6 +180,36 @@
                 </div>
             </div>
 
+            <!-- Service 4: Kraken Trading Bot -->
+            <div class="channel-block" style="border-left-color: #5741D9;">
+                <div class="channel-header">
+                    <span class="channel-title">🐙 Kraken AI Margin Bot</span>
+                    <select id="mode_kraken" class="mode-select" onchange="toggleChannel('kraken')">
+                        <option value="configure">⚙️ Configure Now</option>
+                        <option value="skip" selected>⏭️ Skip for Later</option>
+                    </select>
+                </div>
+                <div id="fields_kraken" style="display: none;">
+                    <input type="password" id="kraken_api_key" placeholder="Kraken API Key">
+                    <input type="password" id="kraken_api_secret" placeholder="Kraken API Secret">
+                    
+                    <div style="display:flex; gap:10px; margin-top:0.5rem;">
+                        <select id="kraken_max_leverage" style="flex:1; padding:0.8rem; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.1); border-radius:4px;">
+                            <option value="1">No Margin (Spot Only)</option>
+                            <option value="2">Max Leverage: 2x</option>
+                            <option value="3">Max Leverage: 3x</option>
+                            <option value="5" selected>Max Leverage: 5x</option>
+                            <option value="10">Max Leverage: 10x</option>
+                        </select>
+                        <select id="kraken_max_pairs" style="flex:1; padding:0.8rem; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.1); border-radius:4px;">
+                            <option value="5">Top 5 Pairs</option>
+                            <option value="20">Top 20 Pairs</option>
+                            <option value="all" selected>All Available Margin Pairs</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <button type="submit" class="btn-submit">
                 🚀 Save Setup & Open Dashboard
             </button>
@@ -200,6 +230,9 @@
                 if (data.config) {
                     if (data.config.store_name) document.getElementById('store_name').value = data.config.store_name;
                     if (data.config.merchant_wallet) document.getElementById('merchant_wallet').value = data.config.merchant_wallet;
+                    if (data.config.kraken_api_key) document.getElementById('kraken_api_key').value = data.config.kraken_api_key;
+                    if (data.config.kraken_max_leverage) document.getElementById('kraken_max_leverage').value = data.config.kraken_max_leverage;
+                    if (data.config.kraken_max_pairs) document.getElementById('kraken_max_pairs').value = data.config.kraken_max_pairs;
                 }
             } catch (e) {}
         });
@@ -215,10 +248,15 @@
                 store_name: document.getElementById('store_name').value,
                 merchant_wallet: document.getElementById('merchant_wallet').value,
                 admin_pin: document.getElementById('admin_pin').value,
+                kraken_api_key: document.getElementById('kraken_api_key').value,
+                kraken_api_secret: document.getElementById('kraken_api_secret').value,
+                kraken_max_leverage: document.getElementById('kraken_max_leverage').value,
+                kraken_max_pairs: document.getElementById('kraken_max_pairs').value,
                 channels: {
                     telegram: document.getElementById('mode_telegram').value,
                     discord: document.getElementById('mode_discord').value,
                     whatsapp: document.getElementById('mode_whatsapp').value,
+                    kraken: document.getElementById('mode_kraken').value
                 }
             };
 

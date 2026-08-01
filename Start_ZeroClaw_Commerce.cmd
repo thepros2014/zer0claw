@@ -16,8 +16,13 @@ cd ..
 echo [2/3] Auto-provisioning Telegram, Discord, and WhatsApp bots...
 powershell -ExecutionPolicy Bypass -File .\install_bots.ps1
 
-echo [3/3] Launching Storefront Bots ^& Opening Dashboard...
+echo [3/4] Launching Storefront Bots ^& Opening Dashboard...
 cd telegram-bot
+start /b python bot.py
+cd ..
+
+echo [4/4] Launching Kraken AI Margin Trading Engine...
+cd kraken-bot
 start /b python bot.py
 cd ..
 
