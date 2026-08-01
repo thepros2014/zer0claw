@@ -24,14 +24,14 @@ KRAKEN_API_SECRET = master_cfg.get("kraken_api_secret") or os.getenv("KRAKEN_API
 
 # AI Margin Bot Settings
 MAX_LEVERAGE = int(master_cfg.get("kraken_max_leverage", os.getenv("KRAKEN_MAX_LEVERAGE", "10")))
-WATCHLIST = ["BTC/USD", "ETH/USD", "SOL/USD", "CSPR/USD", "CAP/USD", "XRP/USD", "ADA/USD", "DOGE/USD", "DOT/USD", "MATIC/USD"]
+WATCHLIST = ["BTC/USD", "ETH/USD", "SOL/USD", "CSPR/USD", "CAP/USD", "XRP/USD", "ADA/USD", "DOGE/USD", "DOT/USD", "POL/USD"]
 MEMORY_BANK_LIMIT_GB = 2.0
 STOP_LOSS_PCT = 0.02  # 2% stop loss
 
 TRADE_AMOUNT_USD = float(os.getenv("TRADE_AMOUNT_USD", "10.0")) # Dollar value per trade for testing
 
 TIMEFRAME = "15m"
-DRY_RUN = os.getenv("DRY_RUN", "True").lower() in ("true", "1", "yes")
+DRY_RUN = os.getenv("DRY_RUN", "False").lower() in ("true", "1", "yes")
 POLL_INTERVAL = int(os.getenv("POLL_INTERVAL", "300")) # 5 minutes
 
 channels = master_cfg.get("channels", {})
