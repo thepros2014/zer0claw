@@ -137,9 +137,13 @@ async def handle_chat(payload: ChatMessage):
                 models = tags_res.json().get("models", [])
                 if models:
                     model_names = [m["name"] for m in models]
-                    stable_models = [m for m in model_names if "dolphin" in m.lower() or "eve" in m.lower() or "llama" in m.lower() or "phi" in m.lower()]
-                    other_models = [m for m in model_names if m not in stable_models]
-                    prioritized_models = stable_models + other_models
+                    prioritized_models = []
+                    if "dolphin-phi:latest" in model_names:
+                        prioritized_models.append("dolphin-phi:latest")
+                    else:
+                        stable_models = [m for m in model_names if "dolphin" in m.lower() or "eve" in m.lower() or "llama" in m.lower() or "phi" in m.lower()]
+                        other_models = [m for m in model_names if m not in stable_models]
+                        prioritized_models = stable_models + other_models
 
                     context_str = f"Current Portfolio Value: ${bot_state.get('portfolio_value', 0):.2f}, Open Positions: {bot_state.get('open_positions', 0)}, Status: {bot_state.get('status', 'offline')}."
                     if bot_state.get("signals"):
