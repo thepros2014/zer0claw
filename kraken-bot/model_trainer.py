@@ -34,20 +34,27 @@ async def fetch_historical_data(symbol, timeframe="15m", limit=1000):
         return None
 
 async def train_model():
-    logger.info(f"Starting Multi-Asset PPO Training...")
+    logger.info(f"Starting Multi-Asset PPO Training on Generalized Market Data...")
     
-    # Train on the specifically targeted margin pair
-    symbol = config.TARGET_PAIR
-    df = await fetch_historical_data(symbol)
+    all_features = []
     
-    if df is None or len(df) < 100:
-        logger.error("Not enough data to train model.")
+    for symbol in config.WATCHLIST:
+        df = await fetch_historical_data(symbol)
+        if df is not None and len(df) >= 100:
+            # Exclude timestamp from observations
+            features = df.drop(columns=['timestamp'])
+            all_features.append(features)
+        else:
+            logger.warning(f"Skipping {symbol} due to insufficient data.")
+            
+    if not all_features:
+        logger.error("No data fetched. Aborting training.")
         return
-
-    # Exclude timestamp from observations
-    features = df.drop(columns=['timestamp'])
+        
+    # Combine all historical datasets into one massive environment sequence
+    combined_features = pd.concat(all_features, ignore_index=True)
     
-    env = DummyVecEnv([lambda: KrakenMarginEnv(features, max_leverage=config.MAX_LEVERAGE)])
+    env = DummyVecEnv([lambda: KrakenMarginEnv(combined_features, max_leverage=config.MAX_LEVERAGE)])
     
     logger.info("Initializing PPO Neural Network...")
     model = PPO("MlpPolicy", env, verbose=1, learning_rate=0.0003)

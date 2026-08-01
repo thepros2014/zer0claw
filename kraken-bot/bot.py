@@ -58,63 +58,117 @@ async def main():
     logger.info("Loading Neural Network AI Brain...")
     model = PPO.load(model_path)
 
-    margin_pairs = [config.TARGET_PAIR]
-    logger.info(f"Scanning Target Pair: {config.TARGET_PAIR}")
-
-    # State tracking: symbol -> position (1 for long, -1 for short, 0 for flat)
-    positions = {symbol: 0 for symbol in margin_pairs}
+    logger.info(f"Watchlist: {', '.join(config.WATCHLIST)}")
+    
+    # State tracking: Stick to ONE active pair at a time
+    active_trade = None
+    entry_price = 0.0
+    entry_direction = 0  # 1 for long, -1 for short
 
     while True:
         try:
-            logger.info("--- Starting market scan loop ---")
-            for symbol in margin_pairs:
-                obs, current_price = await get_latest_observation(exchange, symbol)
-                if obs is None:
-                    continue
+            if active_trade is None:
+                logger.info("--- Scanning Watchlist for Opportunities ---")
+                
+                # Concurrently fetch observations for all pairs in watchlist
+                tasks = [get_latest_observation(exchange, symbol) for symbol in config.WATCHLIST]
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                
+                for i, symbol in enumerate(config.WATCHLIST):
+                    res = results[i]
+                    if isinstance(res, Exception):
+                        logger.error(f"Failed to fetch {symbol}: {res}")
+                        continue
+                        
+                    obs, current_price = res
+                    if obs is None: continue
                     
-                # AI makes a prediction
-                action, _states = model.predict(obs, deterministic=True)
-                
-                # 0 = Hold/Close, 1 = Long, 2 = Short
-                current_pos = positions[symbol]
-                
-                if action == 1 and current_pos != 1:
-                    logger.info(f"🤖 [AI SIGNAL] {symbol} -> OPEN LONG at {current_price} (Leverage: {config.MAX_LEVERAGE}x)")
-                    positions[symbol] = 1
-                    if not config.DRY_RUN:
-                        try:
-                            # Close short if exists
-                            if current_pos == -1:
+                    action, _ = model.predict(obs, deterministic=True)
+                    
+                    if action == 1:
+                        logger.info(f"🤖 [AI SIGNAL] {symbol} -> OPEN LONG at {current_price} (Leverage: {config.MAX_LEVERAGE}x)")
+                        active_trade = symbol
+                        entry_price = current_price
+                        entry_direction = 1
+                        
+                        if not config.DRY_RUN:
+                            try:
                                 await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
-                            # Open long
-                            await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
-                        except Exception as e:
-                            logger.error(f"Live trade failed: {e}")
-                            
-                elif action == 2 and current_pos != -1:
-                    logger.info(f"🤖 [AI SIGNAL] {symbol} -> OPEN SHORT at {current_price} (Leverage: {config.MAX_LEVERAGE}x)")
-                    positions[symbol] = -1
-                    if not config.DRY_RUN:
-                        try:
-                            # Close long if exists
-                            if current_pos == 1:
+                            except Exception as e:
+                                logger.error(f"Live trade failed: {e}")
+                                active_trade = None
+                        break  # Stop scanning once we find a trade!
+                        
+                    elif action == 2:
+                        logger.info(f"🤖 [AI SIGNAL] {symbol} -> OPEN SHORT at {current_price} (Leverage: {config.MAX_LEVERAGE}x)")
+                        active_trade = symbol
+                        entry_price = current_price
+                        entry_direction = -1
+                        
+                        if not config.DRY_RUN:
+                            try:
                                 await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
-                            # Open short
-                            await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
-                        except Exception as e:
-                            logger.error(f"Live trade failed: {e}")
-                            
-                elif action == 0 and current_pos != 0:
-                    logger.info(f"🤖 [AI SIGNAL] {symbol} -> CLOSE POSITION at {current_price}")
-                    if not config.DRY_RUN:
-                        try:
-                            if current_pos == 1:
-                                await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
-                            elif current_pos == -1:
+                            except Exception as e:
+                                logger.error(f"Live trade failed: {e}")
+                                active_trade = None
+                        break  # Stop scanning once we find a trade!
+
+            else:
+                symbol = active_trade
+                logger.info(f"--- Monitoring Active Trade: {symbol} ---")
+                obs, current_price = await get_latest_observation(exchange, symbol)
+                
+                if obs is not None:
+                    # 2% Stop Loss Logic
+                    if entry_direction == 1 and current_price <= entry_price * (1 - config.STOP_LOSS_PCT):
+                        logger.warning(f"🚨 [STOP LOSS] {symbol} Long hit {config.STOP_LOSS_PCT*100}% loss at {current_price}. CLOSING POSITION.")
+                        action = 0
+                        stop_loss_triggered = True
+                    elif entry_direction == -1 and current_price >= entry_price * (1 + config.STOP_LOSS_PCT):
+                        logger.warning(f"🚨 [STOP LOSS] {symbol} Short hit {config.STOP_LOSS_PCT*100}% loss at {current_price}. CLOSING POSITION.")
+                        action = 0
+                        stop_loss_triggered = True
+                    else:
+                        stop_loss_triggered = False
+                        action, _ = model.predict(obs, deterministic=True)
+
+                    if action == 0 or stop_loss_triggered:
+                        if not stop_loss_triggered:
+                            logger.info(f"🤖 [AI SIGNAL] {symbol} -> CLOSE POSITION at {current_price}")
+                        
+                        if not config.DRY_RUN:
+                            try:
+                                if entry_direction == 1:
+                                    await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                                elif entry_direction == -1:
+                                    await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                            except Exception as e:
+                                logger.error(f"Live trade failed: {e}")
+                                
+                        active_trade = None
+                        entry_direction = 0
+                        
+                    elif action == 1 and entry_direction == -1:
+                        logger.info(f"🤖 [AI REVERSAL] {symbol} -> CLOSE SHORT, OPEN LONG at {current_price}")
+                        if not config.DRY_RUN:
+                            try:
                                 await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
-                        except Exception as e:
-                            logger.error(f"Live trade failed: {e}")
-                    positions[symbol] = 0
+                                await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                            except Exception as e:
+                                logger.error(f"Live trade failed: {e}")
+                        entry_price = current_price
+                        entry_direction = 1
+                        
+                    elif action == 2 and entry_direction == 1:
+                        logger.info(f"🤖 [AI REVERSAL] {symbol} -> CLOSE LONG, OPEN SHORT at {current_price}")
+                        if not config.DRY_RUN:
+                            try:
+                                await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                                await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                            except Exception as e:
+                                logger.error(f"Live trade failed: {e}")
+                        entry_price = current_price
+                        entry_direction = -1
 
             logger.info(f"Sleeping for {config.POLL_INTERVAL} seconds...")
             await asyncio.sleep(config.POLL_INTERVAL)
