@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZeroClaw Commerce — Merchant Setup & Channel Wizard</title>
+    <title>Kraken AI Margin Trading — Configuration Wizard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,8 +12,8 @@
             --bg-dark: #090D16;
             --panel-bg: rgba(18, 24, 38, 0.85);
             --panel-border: rgba(255, 255, 255, 0.1);
-            --solana-green: #14F195;
-            --solana-purple: #9945FF;
+            --ai-blue: #3A86FF;
+            --ai-purple: #8338EC;
             --text-primary: #FFFFFF;
             --text-secondary: #94A3B8;
         }
@@ -30,8 +30,8 @@
             justify-content: center;
             padding: 2rem;
             background-image: 
-                radial-gradient(circle at 50% 20%, rgba(153, 69, 255, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 50% 80%, rgba(20, 241, 149, 0.1) 0%, transparent 50%);
+                radial-gradient(circle at 50% 20%, rgba(131, 56, 236, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 50% 80%, rgba(58, 134, 255, 0.1) 0%, transparent 50%);
         }
 
         .setup-card {
@@ -41,18 +41,18 @@
             border-radius: 20px;
             padding: 2.5rem;
             width: 100%;
-            max-width: 680px;
+            max-width: 600px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
         }
 
         .header { text-align: center; margin-bottom: 2rem; }
         .header-icon {
             width: 56px; height: 56px;
-            background: linear-gradient(135deg, var(--solana-purple), var(--solana-green));
+            background: linear-gradient(135deg, var(--ai-purple), var(--ai-blue));
             border-radius: 16px;
             display: flex; align-items: center; justify-content: center;
             font-size: 1.8rem; margin: 0 auto 1rem auto;
-            box-shadow: 0 0 30px rgba(153, 69, 255, 0.4);
+            box-shadow: 0 0 30px rgba(131, 56, 236, 0.4);
         }
         .title { font-size: 1.6rem; font-weight: 800; margin-bottom: 0.4rem; }
         .subtitle { color: var(--text-secondary); font-size: 0.9rem; }
@@ -64,7 +64,7 @@
             text-transform: uppercase; letter-spacing: 0.05em;
         }
 
-        input[type="text"], input[type="number"], input[type="password"], select {
+        input[type="text"], input[type="password"], select {
             width: 100%; background: rgba(0, 0, 0, 0.3);
             border: 1px solid var(--panel-border); border-radius: 10px;
             padding: 0.85rem 1rem; color: white; font-size: 0.95rem;
@@ -72,31 +72,12 @@
         }
 
         input:focus, select:focus {
-            outline: none; border-color: var(--solana-green);
-            box-shadow: 0 0 10px rgba(20, 241, 149, 0.2);
-        }
-
-        .channel-block {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--panel-border);
-            border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem;
-        }
-
-        .channel-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 0.75rem;
-        }
-
-        .channel-title { font-weight: 700; font-size: 0.95rem; }
-
-        .mode-select {
-            background: rgba(0, 0, 0, 0.4); color: var(--solana-green);
-            border: 1px solid var(--panel-border); border-radius: 6px;
-            padding: 0.35rem 0.7rem; font-size: 0.8rem; font-weight: 600;
+            outline: none; border-color: var(--ai-blue);
+            box-shadow: 0 0 10px rgba(58, 134, 255, 0.2);
         }
 
         .btn-submit {
-            width: 100%; background: linear-gradient(135deg, var(--solana-purple), #7C3AED);
+            width: 100%; background: linear-gradient(135deg, var(--ai-purple), var(--ai-blue));
             color: white; border: none; padding: 1rem; border-radius: 12px;
             font-size: 1rem; font-weight: 700; cursor: pointer;
             transition: transform 0.2s, opacity 0.2s; margin-top: 1rem;
@@ -115,105 +96,55 @@
 
     <div class="setup-card">
         <div class="header">
-            <div class="header-icon">🛡️</div>
-            <h1 class="title">ZeroClaw Commerce</h1>
-            <p class="subtitle">First-Time Setup & Per-Channel Configuration Wizard</p>
+            <div class="header-icon">🐙</div>
+            <h1 class="title">Kraken AI Margin Trading</h1>
+            <p class="subtitle">Initial Configuration & Authentication</p>
         </div>
 
         <form id="setup-form">
+            <!-- Kraken API Keys -->
             <div class="form-group">
-                <label for="store_name">Merchant Store Name</label>
-                <input type="text" id="store_name" value="Solana Dev Academy Store" required>
+                <label for="kraken_api_key">Kraken API Key</label>
+                <input type="password" id="kraken_api_key" placeholder="Enter your Kraken API Key" required>
+            </div>
+            <div class="form-group">
+                <label for="kraken_api_secret">Kraken API Secret</label>
+                <input type="password" id="kraken_api_secret" placeholder="Enter your Kraken API Secret" required>
             </div>
 
-            <div class="form-group">
-                <label for="merchant_wallet">Solana Receiving Wallet Address</label>
-                <input type="text" id="merchant_wallet" value="FWuAvPKkLxzG47Rygu19NAHLNjUt3y65xyH3NHBwKZUM" required>
+            <div style="display:flex; gap:10px; margin-bottom: 1.25rem;">
+                <!-- Leverage -->
+                <div style="flex:1;">
+                    <label for="kraken_max_leverage">Max Leverage Limit</label>
+                    <select id="kraken_max_leverage">
+                        <option value="1">No Margin (Spot Only)</option>
+                        <option value="2">Max Leverage: 2x</option>
+                        <option value="3">Max Leverage: 3x</option>
+                        <option value="5">Max Leverage: 5x</option>
+                        <option value="10" selected>Max Leverage: 10x</option>
+                    </select>
+                </div>
+                <!-- Trading Pair -->
+                <div style="flex:1;">
+                    <label for="kraken_trading_pair">Target Trading Pair</label>
+                    <input type="text" id="kraken_trading_pair" placeholder="e.g. BTC/USD" value="BTC/USD" required>
+                </div>
             </div>
-
-            <!-- Admin PIN Setup -->
+            
             <div class="form-group">
-                <label for="admin_pin">Create 6-Digit Admin Security PIN</label>
+                <label for="admin_pin">Admin Security PIN</label>
                 <input type="password" id="admin_pin" value="123456" maxlength="6" pattern="\d{6}" required>
-                <p style="font-size:0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Required to unlock Tax CSV exports & Admin controls in the dashboard.</p>
-            </div>
-
-            <!-- Channel 1: Telegram -->
-            <div class="channel-block">
-                <div class="channel-header">
-                    <span class="channel-title">🤖 Telegram Storefront Bot</span>
-                    <select id="mode_telegram" class="mode-select" onchange="toggleChannel('telegram')">
-                        <option value="configure">⚙️ Configure Now</option>
-                        <option value="skip">⏭️ Skip for Later</option>
-                    </select>
-                </div>
-                <div id="fields_telegram">
-                    <input type="password" id="token_telegram" placeholder="Telegram Token (from @BotFather)">
-                </div>
-            </div>
-
-            <!-- Channel 2: Discord -->
-            <div class="channel-block">
-                <div class="channel-header">
-                    <span class="channel-title">🎮 Discord Slash Bot</span>
-                    <select id="mode_discord" class="mode-select" onchange="toggleChannel('discord')">
-                        <option value="configure">⚙️ Configure Now</option>
-                        <option value="skip" selected>⏭️ Skip for Later</option>
-                    </select>
-                </div>
-                <div id="fields_discord" style="display: none;">
-                    <input type="password" id="token_discord" placeholder="Discord Bot Token">
-                </div>
-            </div>
-
-            <!-- Channel 3: WhatsApp -->
-            <div class="channel-block">
-                <div class="channel-header">
-                    <span class="channel-title">📱 WhatsApp Cloud API Webhook</span>
-                    <select id="mode_whatsapp" class="mode-select" onchange="toggleChannel('whatsapp')">
-                        <option value="configure">⚙️ Configure Now</option>
-                        <option value="skip" selected>⏭️ Skip for Later</option>
-                    </select>
-                </div>
-                <div id="fields_whatsapp" style="display: none;">
-                    <input type="text" id="token_whatsapp" placeholder="WhatsApp Verify Token" value="solona_secure_verify_token">
-                </div>
-            </div>
-
-            <!-- Service 4: Kraken Trading Bot -->
-            <div class="channel-block" style="border-left-color: #5741D9;">
-                <div class="channel-header">
-                    <span class="channel-title">🐙 Kraken AI Margin Bot</span>
-                    <select id="mode_kraken" class="mode-select" onchange="toggleChannel('kraken')">
-                        <option value="configure">⚙️ Configure Now</option>
-                        <option value="skip" selected>⏭️ Skip for Later</option>
-                    </select>
-                </div>
-                <div id="fields_kraken" style="display: none;">
-                    <input type="password" id="kraken_api_key" placeholder="Kraken API Key">
-                    <input type="password" id="kraken_api_secret" placeholder="Kraken API Secret">
-                    
-                    <div style="display:flex; gap:10px; margin-top:0.5rem;">
-                        <select id="kraken_max_leverage" style="flex:1; padding:0.8rem; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.1); border-radius:4px;">
-                            <option value="1">No Margin (Spot Only)</option>
-                            <option value="2">Max Leverage: 2x</option>
-                            <option value="3">Max Leverage: 3x</option>
-                            <option value="5" selected>Max Leverage: 5x</option>
-                            <option value="10">Max Leverage: 10x</option>
-                        </select>
-                        <input type="text" id="kraken_trading_pair" placeholder="Trading Pair (e.g. BTC/USD)" value="BTC/USD" style="flex:1; padding:0.8rem; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.1); border-radius:4px;">
-                    </div>
-                </div>
+                <p style="font-size:0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Required to unlock Dashboard settings.</p>
             </div>
 
             <button type="submit" class="btn-submit">
-                🚀 Save Setup & Open Dashboard
+                🚀 Save Setup & Open AI Dashboard
             </button>
         </form>
 
         <div class="alert-success" id="success-alert">
             ✅ <b>Configuration Saved!</b><br>
-            Redirecting to Sales & Security Dashboard...
+            Redirecting to AI Dashboard...
         </div>
     </div>
 
@@ -224,8 +155,6 @@
                 const res = await fetch('/api/v1/setup/status');
                 const data = await res.json();
                 if (data.config) {
-                    if (data.config.store_name) document.getElementById('store_name').value = data.config.store_name;
-                    if (data.config.merchant_wallet) document.getElementById('merchant_wallet').value = data.config.merchant_wallet;
                     if (data.config.kraken_api_key) document.getElementById('kraken_api_key').value = data.config.kraken_api_key;
                     if (data.config.kraken_max_leverage) document.getElementById('kraken_max_leverage').value = data.config.kraken_max_leverage;
                     if (data.config.kraken_trading_pair) document.getElementById('kraken_trading_pair').value = data.config.kraken_trading_pair;
@@ -233,27 +162,14 @@
             } catch (e) {}
         });
 
-        function toggleChannel(ch) {
-            const mode = document.getElementById(`mode_${ch}`).value;
-            document.getElementById(`fields_${ch}`).style.display = (mode === 'configure') ? 'block' : 'none';
-        }
-
         document.getElementById('setup-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const payload = {
-                store_name: document.getElementById('store_name').value,
-                merchant_wallet: document.getElementById('merchant_wallet').value,
                 admin_pin: document.getElementById('admin_pin').value,
                 kraken_api_key: document.getElementById('kraken_api_key').value,
                 kraken_api_secret: document.getElementById('kraken_api_secret').value,
                 kraken_max_leverage: document.getElementById('kraken_max_leverage').value,
-                kraken_trading_pair: document.getElementById('kraken_trading_pair').value,
-                channels: {
-                    telegram: document.getElementById('mode_telegram').value,
-                    discord: document.getElementById('mode_discord').value,
-                    whatsapp: document.getElementById('mode_whatsapp').value,
-                    kraken: document.getElementById('mode_kraken').value
-                }
+                kraken_trading_pair: document.getElementById('kraken_trading_pair').value
             };
 
             try {
