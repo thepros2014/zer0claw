@@ -10,21 +10,6 @@ import config
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("kraken-bot")
 
-def fetch_active_margin_pairs(exchange):
-    try:
-        markets = exchange.load_markets()
-        margin_pairs = []
-        for symbol, market in markets.items():
-            if market.get('margin', False) and market.get('active', True):
-                # Optionally filter for USD base pairs to keep it manageable
-                if '/USD' in symbol:
-                    margin_pairs.append(symbol)
-        
-        # Limit to max pairs setting
-        return margin_pairs[:config.MAX_PAIRS]
-    except Exception as e:
-        logger.error(f"Failed to fetch margin pairs: {e}")
-        return []
 
 def get_latest_observation(exchange, symbol):
     try:
@@ -54,7 +39,7 @@ def main():
 
     logger.info("Starting ZeroClaw Kraken AI Margin Engine...")
     logger.info(f"Max Leverage Allowed: {config.MAX_LEVERAGE}x")
-    logger.info(f"Max Pairs Limit: {config.MAX_PAIRS}")
+    logger.info(f"Target Trading Pair: {config.TARGET_PAIR}")
     logger.info(f"Dry Run Mode: {config.DRY_RUN}")
 
     exchange_args = {
@@ -73,8 +58,8 @@ def main():
     logger.info("Loading Neural Network AI Brain...")
     model = PPO.load(model_path)
 
-    margin_pairs = fetch_active_margin_pairs(exchange)
-    logger.info(f"Scanning {len(margin_pairs)} margin pairs: {', '.join(margin_pairs[:5])}...")
+    margin_pairs = [config.TARGET_PAIR]
+    logger.info(f"Scanning Target Pair: {config.TARGET_PAIR}")
 
     # State tracking: symbol -> position (1 for long, -1 for short, 0 for flat)
     positions = {symbol: 0 for symbol in margin_pairs}

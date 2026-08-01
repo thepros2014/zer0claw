@@ -33,9 +33,8 @@ def fetch_historical_data(symbol, timeframe="15m", limit=1000):
 def train_model():
     logger.info(f"Starting Multi-Asset PPO Training...")
     
-    # Normally we would loop config.MAX_PAIRS, but for simplicity in this example
-    # we train on the most liquid margin pair to build a generalized base model.
-    symbol = "BTC/USD"
+    # Train on the specifically targeted margin pair
+    symbol = config.TARGET_PAIR
     df = fetch_historical_data(symbol)
     
     if df is None or len(df) < 100:
