@@ -169,13 +169,19 @@ async def main():
                             amount_str = exchange.amount_to_precision(symbol, amount_to_trade)
                             amount_to_trade = float(amount_str)
                             
-                            if amount_to_trade <= 0:
-                                logger.warning(f"Calculated trade amount is 0 (Insufficient Balance). Skipping trade.")
+                            # Check minimum volume limits
+                            market = exchange.markets[symbol]
+                            min_amount = market['limits']['amount']['min']
+                            
+                            if amount_to_trade < min_amount:
+                                logger.warning(f"Calculated trade amount {amount_to_trade} is below Kraken's strict minimum limit of {min_amount} for {symbol}. Skipping trade.")
                                 continue
 
                             if action in [1, 2]:
+                                logger.info(f"Executing Buy Order for {amount_to_trade} {base_asset}")
                                 await exchange.create_market_buy_order(symbol, amount_to_trade, params=order_params)
                             elif action in [3, 4]:
+                                logger.info(f"Executing Sell Order for {amount_to_trade} {base_asset}")
                                 await exchange.create_market_sell_order(symbol, amount_to_trade, params=order_params)
                         except Exception as e:
                             logger.error(f"Live trade failed: {e}")
