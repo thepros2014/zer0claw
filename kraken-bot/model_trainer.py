@@ -1,5 +1,6 @@
 import os
-import ccxt
+import asyncio
+import ccxt.async_support as ccxt
 import pandas as pd
 import logging
 from stable_baselines3 import PPO
@@ -11,12 +12,13 @@ from trading_env import KrakenMarginEnv
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("model_trainer")
 
-def fetch_historical_data(symbol, timeframe="15m", limit=1000):
+async def fetch_historical_data(symbol, timeframe="15m", limit=1000):
     logger.info(f"Fetching historical data for {symbol}...")
     exchange = ccxt.kraken({'enableRateLimit': True})
     
     try:
-        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
+        ohlcv = await exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
+        await exchange.close()
         df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
         
@@ -27,15 +29,16 @@ def fetch_historical_data(symbol, timeframe="15m", limit=1000):
         df.reset_index(drop=True, inplace=True)
         return df
     except Exception as e:
+        await exchange.close()
         logger.error(f"Error fetching data for {symbol}: {e}")
         return None
 
-def train_model():
+async def train_model():
     logger.info(f"Starting Multi-Asset PPO Training...")
     
     # Train on the specifically targeted margin pair
     symbol = config.TARGET_PAIR
-    df = fetch_historical_data(symbol)
+    df = await fetch_historical_data(symbol)
     
     if df is None or len(df) < 100:
         logger.error("Not enough data to train model.")
@@ -57,4 +60,4 @@ def train_model():
     logger.info(f"✅ Model trained and saved to {model_path}.zip")
 
 if __name__ == "__main__":
-    train_model()
+    asyncio.run(train_model())

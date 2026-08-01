@@ -1,6 +1,6 @@
 import os
-import time
-import ccxt
+import asyncio
+import ccxt.async_support as ccxt
 import pandas as pd
 import logging
 from stable_baselines3 import PPO
@@ -11,9 +11,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(level
 logger = logging.getLogger("kraken-bot")
 
 
-def get_latest_observation(exchange, symbol):
+async def get_latest_observation(exchange, symbol):
     try:
-        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=config.TIMEFRAME, limit=50)
+        ohlcv = await exchange.fetch_ohlcv(symbol, timeframe=config.TIMEFRAME, limit=50)
         df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
         
         from ta import add_all_ta_features
@@ -32,7 +32,7 @@ def get_latest_observation(exchange, symbol):
         logger.error(f"Error getting observation for {symbol}: {e}")
         return None, None
 
-def main():
+async def main():
     if not config.KRAKEN_ENABLED:
         logger.info("Kraken AI Margin Bot is disabled in setup config. Exiting.")
         return
@@ -68,7 +68,7 @@ def main():
         try:
             logger.info("--- Starting market scan loop ---")
             for symbol in margin_pairs:
-                obs, current_price = get_latest_observation(exchange, symbol)
+                obs, current_price = await get_latest_observation(exchange, symbol)
                 if obs is None:
                     continue
                     
@@ -85,9 +85,9 @@ def main():
                         try:
                             # Close short if exists
                             if current_pos == -1:
-                                exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                                await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
                             # Open long
-                            exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                            await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
                         except Exception as e:
                             logger.error(f"Live trade failed: {e}")
                             
@@ -98,9 +98,9 @@ def main():
                         try:
                             # Close long if exists
                             if current_pos == 1:
-                                exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                                await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
                             # Open short
-                            exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                            await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
                         except Exception as e:
                             logger.error(f"Live trade failed: {e}")
                             
@@ -109,19 +109,19 @@ def main():
                     if not config.DRY_RUN:
                         try:
                             if current_pos == 1:
-                                exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                                await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
                             elif current_pos == -1:
-                                exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                                await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
                         except Exception as e:
                             logger.error(f"Live trade failed: {e}")
                     positions[symbol] = 0
 
             logger.info(f"Sleeping for {config.POLL_INTERVAL} seconds...")
-            time.sleep(config.POLL_INTERVAL)
+            await asyncio.sleep(config.POLL_INTERVAL)
             
         except Exception as e:
             logger.error(f"Error in main loop: {e}")
-            time.sleep(60)
+            await asyncio.sleep(60)
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
