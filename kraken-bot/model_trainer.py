@@ -36,18 +36,13 @@ async def fetch_historical_data(symbol, timeframe="15m", limit=1000):
 async def train_model():
     logger.info(f"Starting Multi-Asset PPO Training on Generalized Market Data...")
     
-    exchange = ccxt.kraken({'enableRateLimit': True})
-    await exchange.load_markets()
-    
-    # Get ALL active USD margin pairs
-    all_pairs = [symbol for symbol, market in exchange.markets.items() if market.get('margin', False) and '/USD' in symbol and market.get('active', True)]
-    logger.info(f"Discovered {len(all_pairs)} active USD margin pairs on Kraken. Fetching historical data...")
+    logger.info(f"Using Watchlist: {', '.join(config.WATCHLIST)}")
     
     all_features = []
     total_memory_bytes = 0
     max_memory_bytes = config.MEMORY_BANK_LIMIT_GB * 1024 * 1024 * 1024
     
-    for symbol in all_pairs:
+    for symbol in config.WATCHLIST:
         # Check if we've hit the 2GB memory bank limit
         if total_memory_bytes >= max_memory_bytes:
             logger.warning(f"Reached {config.MEMORY_BANK_LIMIT_GB}GB Memory Bank Limit. Stopping data fetch.")
@@ -61,8 +56,6 @@ async def train_model():
             total_memory_bytes += features.memory_usage(deep=True).sum()
         else:
             logger.warning(f"Skipping {symbol} due to insufficient data.")
-            
-    await exchange.close()
             
     if not all_features:
         logger.error("No data fetched. Aborting training.")
