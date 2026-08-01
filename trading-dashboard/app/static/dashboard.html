@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kraken AI Margin Trading — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #090D16;
+            --panel-bg: rgba(18, 24, 38, 0.85);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            --ai-blue: #3A86FF;
+            --ai-purple: #8338EC;
+            --text-primary: #FFFFFF;
+            --text-secondary: #94A3B8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(131, 56, 236, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(58, 134, 255, 0.1) 0%, transparent 40%);
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+        .nav-brand {
+            font-size: 1.25rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--ai-purple), var(--ai-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem; font-weight: 600; text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        .stat-value {
+            font-size: 1.8rem; font-weight: 800;
+        }
+        .text-green { color: #10B981; }
+        .text-blue { color: var(--ai-blue); }
+
+        .main-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 2rem;
+            min-height: 400px;
+            backdrop-filter: blur(10px);
+        }
+        .panel-title {
+            font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            background: rgba(16, 185, 129, 0.15);
+            color: #10B981;
+            border-radius: 20px;
+            font-size: 0.8rem; font-weight: 700;
+        }
+
+        table {
+            width: 100%; border-collapse: collapse;
+        }
+        th, td {
+            text-align: left; padding: 1rem; border-bottom: 1px solid var(--panel-border);
+        }
+        th { color: var(--text-secondary); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; }
+        td { font-size: 0.95rem; }
+
+        .btn-settings {
+            background: rgba(255,255,255,0.05); color: white;
+            border: 1px solid var(--panel-border);
+            padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;
+            text-decoration: none; font-size: 0.85rem;
+        }
+        .btn-settings:hover { background: rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <div class="nav-brand">🐙 Kraken AI Trading Engine</div>
+        <div>
+            <a href="/setup" class="btn-settings">⚙️ Settings</a>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="stat-card">
+            <div class="stat-label">Network Status</div>
+            <div class="stat-value text-green" id="stat-status">ACTIVE</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">AI Learning Rate (PPO)</div>
+            <div class="stat-value" id="stat-lr">0.0000</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Open Positions</div>
+            <div class="stat-value text-blue" id="stat-open">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Estimated PnL</div>
+            <div class="stat-value text-green" id="stat-pnl">$0.00</div>
+        </div>
+    </div>
+
+    <div class="main-panel">
+        <div class="panel-title">
+            <span>Live AI Activity Log</span>
+            <span class="status-badge">● Trading Engine Online</span>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Action</th>
+                    <th>Pair</th>
+                    <th>Confidence</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="5" style="text-align:center; color: #94A3B8; padding: 3rem;">
+                        Waiting for initial AI Model training and Kraken websocket telemetry...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/v1/dashboard/stats');
+                const data = await res.json();
+                document.getElementById('stat-status').innerText = data.status.toUpperCase();
+                document.getElementById('stat-lr').innerText = data.learning_rate;
+                document.getElementById('stat-open').innerText = data.open_positions;
+                document.getElementById('stat-pnl').innerText = '$' + parseFloat(data.pnl_usd).toFixed(2);
+            } catch (err) {
+                console.error("Error fetching stats:", err);
+            }
+        }
+        
+        setInterval(fetchStats, 5000);
+        fetchStats();
+    </script>
+</body>
+</html>
