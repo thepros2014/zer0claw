@@ -39,7 +39,6 @@ async def main():
 
     logger.info("Starting ZeroClaw Kraken AI Margin Engine...")
     logger.info(f"Max Leverage Allowed: {config.MAX_LEVERAGE}x")
-    logger.info(f"Target Trading Pair: {config.TARGET_PAIR}")
     logger.info(f"Dry Run Mode: {config.DRY_RUN}")
 
     exchange_args = {
