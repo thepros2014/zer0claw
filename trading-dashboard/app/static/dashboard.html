@@ -110,6 +110,55 @@
             text-decoration: none; font-size: 0.85rem;
         }
         .btn-settings:hover { background: rgba(255,255,255,0.1); }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+        .chat-panel {
+            display: flex; flex-direction: column;
+            padding: 1.5rem;
+        }
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            display: flex; flex-direction: column; gap: 0.8rem;
+            max-height: 300px;
+        }
+        .chat-msg {
+            padding: 0.8rem 1rem; border-radius: 12px;
+            font-size: 0.9rem; max-width: 85%;
+            line-height: 1.4;
+        }
+        .ai-msg {
+            background: rgba(58, 134, 255, 0.15);
+            border: 1px solid rgba(58, 134, 255, 0.3);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+        .user-msg {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--panel-border);
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .chat-input-wrapper {
+            display: flex; gap: 0.5rem;
+        }
+        .chat-input {
+            flex: 1; background: rgba(0,0,0,0.2);
+            border: 1px solid var(--panel-border);
+            color: white; padding: 0.8rem; border-radius: 8px;
+            font-family: inherit; font-size: 0.9rem; outline: none;
+        }
+        .chat-input:focus { border-color: var(--ai-blue); }
+        .btn-send {
+            background: linear-gradient(135deg, var(--ai-blue), var(--ai-purple));
+            color: white; border: none; padding: 0 1.2rem;
+            border-radius: 8px; font-weight: 600; cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -140,30 +189,46 @@
         </div>
     </div>
 
-    <div class="main-panel">
-        <div class="panel-title">
-            <span>Live AI Activity Log</span>
-            <span class="status-badge">● Trading Engine Online</span>
+    <div class="content-grid">
+        <div class="main-panel">
+            <div class="panel-title">
+                <span>Live AI Activity Log</span>
+                <span class="status-badge">● Trading Engine Online</span>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Action</th>
+                        <th>Pair</th>
+                        <th>Confidence</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="5" style="text-align:center; color: #94A3B8; padding: 3rem;">
+                            Waiting for initial AI Model training and Kraken websocket telemetry...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>Action</th>
-                    <th>Pair</th>
-                    <th>Confidence</th>
-                    <th>Result</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td colspan="5" style="text-align:center; color: #94A3B8; padding: 3rem;">
-                        Waiting for initial AI Model training and Kraken websocket telemetry...
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+
+        <div class="main-panel chat-panel">
+            <div class="panel-title">
+                <span>AI Assistant</span>
+                <span class="status-badge" style="background: rgba(58, 134, 255, 0.15); color: var(--ai-blue);">● Ready</span>
+            </div>
+            <div class="chat-history" id="chat-history">
+                <div class="chat-msg ai-msg">Hello! I am your AI Trading Assistant. Ask me about your portfolio, status, profit, or recent signals!</div>
+            </div>
+            <div class="chat-input-wrapper">
+                <input type="text" id="chat-input" class="chat-input" placeholder="Type a command...">
+                <button onclick="sendChat()" class="btn-send">Send</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -198,6 +263,34 @@
         
         setInterval(fetchStats, 5000);
         fetchStats();
+        async function sendChat() {
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if(!msg) return;
+            
+            const history = document.getElementById('chat-history');
+            history.innerHTML += `<div class="chat-msg user-msg">${msg}</div>`;
+            input.value = '';
+            history.scrollTop = history.scrollHeight;
+            
+            try {
+                const res = await fetch('/api/v1/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: msg})
+                });
+                const data = await res.json();
+                
+                history.innerHTML += `<div class="chat-msg ai-msg">${data.reply}</div>`;
+                history.scrollTop = history.scrollHeight;
+            } catch (err) {
+                history.innerHTML += `<div class="chat-msg ai-msg" style="color:#EF4444">Error connecting to AI backend.</div>`;
+            }
+        }
+        
+        document.getElementById('chat-input').addEventListener('keypress', function(e) {
+            if(e.key === 'Enter') sendChat();
+        });
     </script>
 </body>
 </html>

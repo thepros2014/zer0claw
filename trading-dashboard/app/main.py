@@ -2,8 +2,11 @@ import json
 import logging
 import time
 from typing import Any, Dict
+import re
+import httpx
 
 from fastapi import FastAPI
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import os
@@ -106,6 +109,71 @@ async def get_dashboard_stats():
         "open_positions": 0,
         "total_trades": 0,
         "pnl_usd": 0.0,
-        "portfolio_value": 0.0,
         "signals": []
     }
+
+class ChatMessage(BaseModel):
+    message: str
+
+@app.post("/api/v1/chat", tags=["Dashboard"])
+async def handle_chat(payload: ChatMessage):
+    msg = payload.message.lower().strip()
+    
+    state_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "kraken-bot", "state.json"))
+    bot_state = {}
+    if os.path.exists(state_file):
+        try:
+            with open(state_file, "r") as f:
+                bot_state = json.load(f)
+        except Exception:
+            pass
+
+    # Attempt to use local Ollama if available
+    ollama_url = "http://127.0.0.1:11434"
+    try:
+        async with httpx.AsyncClient() as client:
+            tags_res = await client.get(f"{ollama_url}/api/tags", timeout=2.0)
+            if tags_res.status_code == 200:
+                models = tags_res.json().get("models", [])
+                if models:
+                    model_name = models[0]["name"]
+                    context_str = f"Current Portfolio Value: ${bot_state.get('portfolio_value', 0):.2f}, Open Positions: {bot_state.get('open_positions', 0)}, Status: {bot_state.get('status', 'offline')}."
+                    if bot_state.get("signals"):
+                        recent = ", ".join([f"{s['action']} on {s['symbol']}" for s in bot_state["signals"]])
+                        context_str += f" Recent Signals: {recent}."
+                        
+                    prompt = f"You are the ZeroClaw Kraken AI Trading Assistant. Be concise, helpful, and extremely brief (1-3 sentences max). System context: {context_str}\n\nUser: {payload.message}\nAssistant:"
+                    
+                    chat_res = await client.post(f"{ollama_url}/api/generate", json={
+                        "model": model_name,
+                        "prompt": prompt,
+                        "stream": False
+                    }, timeout=30.0)
+                    
+                    if chat_res.status_code == 200:
+                        return {"reply": chat_res.json().get("response", "...")}
+    except Exception as e:
+        logger.warning(f"Ollama local LLM not reachable, falling back to basic rules: {e}")
+
+    # Fallback basic rule-based logic
+    response_text = "I am your Kraken AI Trading Assistant. Try asking me for 'status', 'portfolio', 'profit', or 'signals'."
+    
+    if "status" in msg or "running" in msg:
+        status = bot_state.get("status", "offline")
+        response_text = f"The trading engine is currently {status.upper()}."
+    elif "portfolio" in msg or "value" in msg or "balance" in msg:
+        val = bot_state.get("portfolio_value", 0.0)
+        response_text = f"Your current estimated portfolio value is ${val:.2f}."
+    elif "profit" in msg or "pnl" in msg:
+        pnl = bot_state.get("pnl_usd", 0.0)
+        response_text = f"Your estimated PnL since start is ${pnl:.2f}."
+    elif "signal" in msg or "trades" in msg or "position" in msg:
+        signals = bot_state.get("signals", [])
+        if not signals:
+            response_text = "No recent signals generated."
+        else:
+            recent = ", ".join([f"{s['action']} on {s['symbol']}" for s in signals])
+            response_text = f"Recent AI signals: {recent}."
+            
+    return {"reply": response_text}
+
