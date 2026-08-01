@@ -129,6 +129,7 @@ async def main():
                 
                 # Action space: 0=Hold, 1=Buy 50%, 2=Buy 100%, 3=Sell 50%, 4=Sell 100%
                 action, _ = model.predict(obs, deterministic=True)
+                action = int(action.item() if hasattr(action, 'item') else action)
                 
                 # Spot Mode overrides (Prevent selling naked shorts)
                 if config.TRADE_MODE == "spot":
