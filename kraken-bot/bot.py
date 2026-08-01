@@ -2,7 +2,6 @@ import os
 import time
 import ccxt
 import pandas as pd
-import pandas_ta as ta
 import logging
 from stable_baselines3 import PPO
 
@@ -32,10 +31,8 @@ def get_latest_observation(exchange, symbol):
         ohlcv = exchange.fetch_ohlcv(symbol, timeframe=config.TIMEFRAME, limit=50)
         df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
         
-        df.ta.rsi(length=14, append=True)
-        df.ta.macd(append=True)
-        df.ta.bbands(append=True)
-        df.ta.atr(append=True)
+        from ta import add_all_ta_features
+        df = add_all_ta_features(df, open="open", high="high", low="low", close="close", volume="volume", fillna=True)
         
         df.dropna(inplace=True)
         

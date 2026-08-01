@@ -1,7 +1,6 @@
 import os
 import ccxt
 import pandas as pd
-import pandas_ta as ta
 import logging
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
@@ -21,11 +20,8 @@ def fetch_historical_data(symbol, timeframe="15m", limit=1000):
         df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
         
-        # Add Technical Indicators for the AI to "see"
-        df.ta.rsi(length=14, append=True)
-        df.ta.macd(append=True)
-        df.ta.bbands(append=True)
-        df.ta.atr(append=True)
+        from ta import add_all_ta_features
+        df = add_all_ta_features(df, open="open", high="high", low="low", close="close", volume="volume", fillna=True)
         
         df.dropna(inplace=True)
         df.reset_index(drop=True, inplace=True)
