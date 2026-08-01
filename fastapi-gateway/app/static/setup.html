@@ -201,11 +201,7 @@
                             <option value="5" selected>Max Leverage: 5x</option>
                             <option value="10">Max Leverage: 10x</option>
                         </select>
-                        <select id="kraken_max_pairs" style="flex:1; padding:0.8rem; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.1); border-radius:4px;">
-                            <option value="5">Top 5 Pairs</option>
-                            <option value="20">Top 20 Pairs</option>
-                            <option value="all" selected>All Available Margin Pairs</option>
-                        </select>
+                        <input type="text" id="kraken_trading_pair" placeholder="Trading Pair (e.g. BTC/USD)" value="BTC/USD" style="flex:1; padding:0.8rem; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.1); border-radius:4px;">
                     </div>
                 </div>
             </div>
@@ -232,7 +228,7 @@
                     if (data.config.merchant_wallet) document.getElementById('merchant_wallet').value = data.config.merchant_wallet;
                     if (data.config.kraken_api_key) document.getElementById('kraken_api_key').value = data.config.kraken_api_key;
                     if (data.config.kraken_max_leverage) document.getElementById('kraken_max_leverage').value = data.config.kraken_max_leverage;
-                    if (data.config.kraken_max_pairs) document.getElementById('kraken_max_pairs').value = data.config.kraken_max_pairs;
+                    if (data.config.kraken_trading_pair) document.getElementById('kraken_trading_pair').value = data.config.kraken_trading_pair;
                 }
             } catch (e) {}
         });
@@ -251,7 +247,7 @@
                 kraken_api_key: document.getElementById('kraken_api_key').value,
                 kraken_api_secret: document.getElementById('kraken_api_secret').value,
                 kraken_max_leverage: document.getElementById('kraken_max_leverage').value,
-                kraken_max_pairs: document.getElementById('kraken_max_pairs').value,
+                kraken_trading_pair: document.getElementById('kraken_trading_pair').value,
                 channels: {
                     telegram: document.getElementById('mode_telegram').value,
                     discord: document.getElementById('mode_discord').value,
