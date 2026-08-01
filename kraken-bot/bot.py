@@ -127,9 +127,57 @@ async def main():
 
     logger.info(f"Watchlist: {', '.join(config.WATCHLIST)}")
     order_params = {'leverage': config.MAX_LEVERAGE} if config.TRADE_MODE == "margin" else {}
+    cmds_file = os.path.join(os.path.dirname(__file__), "commands.json")
+    is_paused = False
 
     while True:
         try:
+            if os.path.exists(cmds_file):
+                try:
+                    with open(cmds_file, "r") as cf:
+                        cmd = json.load(cf)
+                    os.remove(cmds_file)
+                    
+                    intent = cmd.get("intent", "").lower()
+                    if intent == "pause":
+                        logger.warning("🛑 NLP COMMAND RECEIVED: PAUSE TRADING")
+                        is_paused = True
+                    elif intent == "resume":
+                        logger.info("▶️ NLP COMMAND RECEIVED: RESUME TRADING")
+                        is_paused = False
+                    elif intent == "liquidate" or intent == "sell all":
+                        sym = cmd.get("symbol", "ALL").upper()
+                        logger.warning(f"⚠️ NLP COMMAND RECEIVED: LIQUIDATE {sym}")
+                        if not exchange.markets:
+                            await exchange.load_markets()
+                        bal = await exchange.fetch_balance()
+                        
+                        targets = config.WATCHLIST if sym == "ALL" else [sym]
+                        for s in targets:
+                            if s not in exchange.markets: continue
+                            base_asset = s.split('/')[0]
+                            base_amt = bal.get(base_asset, {}).get('free', 0.0)
+                            try:
+                                min_amount = exchange.markets[s]['limits']['amount']['min']
+                                if base_amt >= min_amount:
+                                    amount_str = exchange.amount_to_precision(s, base_amt)
+                                    logger.warning(f"Liquidating {amount_str} {base_asset} on {s}!")
+                                    await exchange.create_market_sell_order(s, float(amount_str), params={})
+                            except Exception as e:
+                                logger.error(f"Liquidation failed for {s}: {e}")
+                except Exception as e:
+                    logger.error(f"Error reading commands.json: {e}")
+
+            if is_paused:
+                bot_state["status"] = "paused"
+                state_file = os.path.join(os.path.dirname(__file__), "state.json")
+                with open(state_file, "w") as f:
+                    json.dump(bot_state, f)
+                await asyncio.sleep(5)
+                continue
+            else:
+                bot_state["status"] = "active"
+
             logger.info(f"--- Synchronizing State with Kraken & Analyzing {len(config.WATCHLIST)} Pairs ---")
             
             bot_state["open_positions"] = 0

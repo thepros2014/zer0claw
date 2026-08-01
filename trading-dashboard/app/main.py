@@ -142,7 +142,12 @@ async def handle_chat(payload: ChatMessage):
                         recent = ", ".join([f"{s['action']} on {s['symbol']}" for s in bot_state["signals"]])
                         context_str += f" Recent Signals: {recent}."
                         
-                    prompt = f"You are the ZeroClaw Kraken AI Trading Assistant. Be concise, helpful, and extremely brief (1-3 sentences max). System context: {context_str}\n\nUser: {payload.message}\nAssistant:"
+                    prompt = f"""You are the ZeroClaw Kraken AI Trading Assistant. Be concise (1-3 sentences max).
+System context: {context_str}
+If the user gives a command to control the bot (e.g. 'pause', 'resume', 'liquidate'/'sell all'), you MUST include a JSON block at the very end of your response exactly like this: [COMMAND: {{"intent": "pause"}}] or [COMMAND: {{"intent": "liquidate", "symbol": "ALL"}}].
+
+User: {payload.message}
+Assistant:"""
                     
                     chat_res = await client.post(f"{ollama_url}/api/generate", json={
                         "model": model_name,
@@ -151,7 +156,21 @@ async def handle_chat(payload: ChatMessage):
                     }, timeout=30.0)
                     
                     if chat_res.status_code == 200:
-                        return {"reply": chat_res.json().get("response", "...")}
+                        full_reply = chat_res.json().get("response", "...")
+                        
+                        # Intercept commands
+                        cmd_match = re.search(r'\[COMMAND:\s*(\{.*?\})\s*\]', full_reply)
+                        if cmd_match:
+                            try:
+                                cmd_json = json.loads(cmd_match.group(1))
+                                cmds_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "kraken-bot", "commands.json"))
+                                with open(cmds_file, "w") as cf:
+                                    json.dump(cmd_json, cf)
+                                full_reply = full_reply.replace(cmd_match.group(0), "").strip()
+                            except Exception as e:
+                                logger.error(f"Failed to parse command JSON: {e}")
+                                
+                        return {"reply": full_reply}
     except Exception as e:
         logger.warning(f"Ollama local LLM not reachable, falling back to basic rules: {e}")
 
