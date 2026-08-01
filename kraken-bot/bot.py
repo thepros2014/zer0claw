@@ -141,9 +141,38 @@ async def main():
                     logger.info(f"🤖 [AI SIGNAL] {symbol} -> {action_name} at {current_price} | Portfolio Val: ${total_val:.2f} | Pos Size: {pos_size*100:.1f}%")
                     
                     if not config.DRY_RUN:
-                        # Dynamic execution
-                        amount_to_trade = config.TRADE_AMOUNT_USD / current_price
+                        # True Dynamic Position Sizing Execution
                         try:
+                            # We must load markets to use precision formatting
+                            if not exchange.markets:
+                                await exchange.load_markets()
+                                
+                            balance_info = await exchange.fetch_balance()
+                            usd_balance = balance_info.get('USD', {}).get('free', 0.0)
+                            if usd_balance == 0.0: usd_balance = balance_info.get('ZUSD', {}).get('free', 0.0)
+                            base_asset = symbol.split('/')[0]
+                            base_balance = balance_info.get(base_asset, {}).get('free', 0.0)
+
+                            amount_to_trade = 0.0
+                            if action == 1: # Buy 50% of available USD
+                                spend_usd = usd_balance * 0.5
+                                amount_to_trade = spend_usd / current_price
+                            elif action == 2: # Buy 100% of available USD
+                                spend_usd = usd_balance * 0.98 # Leave 2% for fees/slippage
+                                amount_to_trade = spend_usd / current_price
+                            elif action == 3: # Sell 50% of base asset
+                                amount_to_trade = base_balance * 0.5
+                            elif action == 4: # Sell 100% of base asset
+                                amount_to_trade = base_balance
+
+                            # Apply Kraken's strict lot size precision rules
+                            amount_str = exchange.amount_to_precision(symbol, amount_to_trade)
+                            amount_to_trade = float(amount_str)
+                            
+                            if amount_to_trade <= 0:
+                                logger.warning(f"Calculated trade amount is 0 (Insufficient Balance). Skipping trade.")
+                                continue
+
                             if action in [1, 2]:
                                 await exchange.create_market_buy_order(symbol, amount_to_trade, params=order_params)
                             elif action in [3, 4]:
