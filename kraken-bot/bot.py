@@ -58,6 +58,9 @@ async def main():
     model = PPO.load(model_path)
 
     logger.info(f"Watchlist: {', '.join(config.WATCHLIST)}")
+    logger.info(f"Trade Mode: {config.TRADE_MODE.upper()}")
+    
+    order_params = {'leverage': config.MAX_LEVERAGE} if config.TRADE_MODE == "margin" else {}
     
     # State tracking: Stick to ONE active pair at a time
     active_trade = None
@@ -84,15 +87,23 @@ async def main():
                     
                     action, _ = model.predict(obs, deterministic=True)
                     
+                    # Prevent naked shorting in Spot Mode
+                    if config.TRADE_MODE == "spot" and action == 2:
+                        continue # Ignore short signals in spot mode
+                        
                     if action == 1:
-                        logger.info(f"🤖 [AI SIGNAL] {symbol} -> OPEN LONG at {current_price} (Leverage: {config.MAX_LEVERAGE}x)")
+                        if config.TRADE_MODE == "margin":
+                            logger.info(f"🤖 [AI SIGNAL] {symbol} -> OPEN LONG at {current_price} (Leverage: {config.MAX_LEVERAGE}x)")
+                        else:
+                            logger.info(f"🤖 [AI SIGNAL] {symbol} -> BUY SPOT at {current_price}")
+                            
                         active_trade = symbol
                         entry_price = current_price
                         entry_direction = 1
                         
                         if not config.DRY_RUN:
                             try:
-                                await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                                await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params=order_params)
                             except Exception as e:
                                 logger.error(f"Live trade failed: {e}")
                                 active_trade = None
@@ -106,7 +117,7 @@ async def main():
                         
                         if not config.DRY_RUN:
                             try:
-                                await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                                await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params=order_params)
                             except Exception as e:
                                 logger.error(f"Live trade failed: {e}")
                                 active_trade = None
@@ -131,6 +142,10 @@ async def main():
                         stop_loss_triggered = False
                         action, _ = model.predict(obs, deterministic=True)
 
+                    # Override short signals in spot mode
+                    if config.TRADE_MODE == "spot" and action == 2:
+                        action = 0  # Treat short signal as close position if we are long
+
                     if action == 0 or stop_loss_triggered:
                         if not stop_loss_triggered:
                             logger.info(f"🤖 [AI SIGNAL] {symbol} -> CLOSE POSITION at {current_price}")
@@ -138,9 +153,9 @@ async def main():
                         if not config.DRY_RUN:
                             try:
                                 if entry_direction == 1:
-                                    await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                                    await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params=order_params)
                                 elif entry_direction == -1:
-                                    await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                                    await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params=order_params)
                             except Exception as e:
                                 logger.error(f"Live trade failed: {e}")
                                 
@@ -151,8 +166,8 @@ async def main():
                         logger.info(f"🤖 [AI REVERSAL] {symbol} -> CLOSE SHORT, OPEN LONG at {current_price}")
                         if not config.DRY_RUN:
                             try:
-                                await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
-                                await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                                await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params=order_params)
+                                await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params=order_params)
                             except Exception as e:
                                 logger.error(f"Live trade failed: {e}")
                         entry_price = current_price
@@ -162,8 +177,8 @@ async def main():
                         logger.info(f"🤖 [AI REVERSAL] {symbol} -> CLOSE LONG, OPEN SHORT at {current_price}")
                         if not config.DRY_RUN:
                             try:
-                                await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
-                                await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params={'leverage': config.MAX_LEVERAGE})
+                                await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params=order_params)
+                                await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params=order_params)
                             except Exception as e:
                                 logger.error(f"Live trade failed: {e}")
                         entry_price = current_price
