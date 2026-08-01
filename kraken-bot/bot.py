@@ -2,6 +2,8 @@ import os
 import asyncio
 import ccxt.async_support as ccxt
 import pandas as pd
+import numpy as np
+from collections import deque
 import logging
 from stable_baselines3 import PPO
 
@@ -10,9 +12,46 @@ import config
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("kraken-bot")
 
+# Global observation buffer for frame stacking
+obs_buffer = {}
 
-async def get_latest_observation(exchange, symbol):
+async def fetch_portfolio_state(exchange, symbol):
+    # Fetch actual balance and open positions from Kraken
     try:
+        balance_info = await exchange.fetch_balance()
+        # Kraken USD balance might be under 'ZUSD' or 'USD'
+        usd_balance = balance_info.get('USD', {}).get('free', 0.0)
+        if usd_balance == 0.0:
+            usd_balance = balance_info.get('ZUSD', {}).get('free', 0.0)
+            
+        # Try to get open positions (margin) or base asset balance (spot)
+        base_asset = symbol.split('/')[0]
+        base_balance = balance_info.get(base_asset, {}).get('free', 0.0)
+        
+        # We will simplify unrealized PnL to 0.0 for now in this wrapper
+        # unless we fetch real trades/orders.
+        unrealized_pnl = 0.0
+        position_size = 0.0
+        
+        current_price = 0.0
+        ticker = await exchange.fetch_ticker(symbol)
+        if ticker and 'last' in ticker:
+            current_price = ticker['last']
+            
+        base_value_usd = base_balance * current_price
+        total_portfolio_value = usd_balance + base_value_usd
+        
+        if total_portfolio_value > 0:
+            position_size = base_value_usd / total_portfolio_value
+            
+        return total_portfolio_value, unrealized_pnl, position_size, current_price
+    except Exception as e:
+        logger.error(f"Error fetching portfolio state: {e}")
+        return 1000.0, 0.0, 0.0, 0.0 # fallback
+
+async def get_latest_observation(exchange, symbol, portfolio_state):
+    try:
+        portfolio_value, unrealized_pnl, position_size, _ = portfolio_state
         ohlcv = await exchange.fetch_ohlcv(symbol, timeframe=config.TIMEFRAME, limit=50)
         df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
         
@@ -24,10 +63,29 @@ async def get_latest_observation(exchange, symbol):
         if len(df) == 0:
             return None, None
             
-        latest_features = df.drop(columns=['timestamp']).iloc[-1].values
+        # Get raw TA features
+        ta_features = df.drop(columns=['timestamp']).iloc[-1].values
+        
+        # Inject portfolio metrics (MUST MATCH trading_env.py obs space exactly)
+        portfolio_metrics = np.array([portfolio_value, unrealized_pnl, position_size])
+        
+        # Final combined observation for this single step
+        single_obs = np.concatenate([ta_features, portfolio_metrics]).astype(np.float32)
         current_price = df['close'].iloc[-1]
         
-        return latest_features, current_price
+        # Manage the 5-frame stack
+        if symbol not in obs_buffer:
+            # Initialize buffer with copies of the first observation
+            obs_buffer[symbol] = deque([single_obs for _ in range(5)], maxlen=5)
+        else:
+            obs_buffer[symbol].append(single_obs)
+            
+        # Stack into a single 1D array of shape (5 * obs_shape,)
+        # Note: SB3 VecFrameStack stacks along the last dimension for 1D obs
+        # or flat concatenation if expected. For a Box environment, PPO flatten might expect (1, stacked_dim)
+        stacked_obs = np.concatenate(list(obs_buffer[symbol]))
+        
+        return stacked_obs, current_price
     except Exception as e:
         logger.error(f"Error getting observation for {symbol}: {e}")
         return None, None
@@ -37,16 +95,14 @@ async def main():
         logger.info("Kraken AI Margin Bot is disabled in setup config. Exiting.")
         return
 
-    logger.info("Starting ZeroClaw Kraken AI Margin Engine...")
-    logger.info(f"Max Leverage Allowed: {config.MAX_LEVERAGE}x")
-    logger.info(f"Dry Run Mode: {config.DRY_RUN}")
-
-    exchange_args = {
+    logger.info("Starting ZeroClaw Kraken AI Margin Engine (Portfolio Aware)...")
+    logger.info(f"Trade Mode: {config.TRADE_MODE.upper()}")
+    
+    exchange = ccxt.kraken({
         'apiKey': config.KRAKEN_API_KEY,
         'secret': config.KRAKEN_API_SECRET,
         'enableRateLimit': True,
-    }
-    exchange = ccxt.kraken(exchange_args)
+    })
 
     model_path = os.path.join(os.path.dirname(__file__), "ppo_trading_model.zip")
     if not os.path.exists(model_path):
@@ -58,131 +114,41 @@ async def main():
     model = PPO.load(model_path)
 
     logger.info(f"Watchlist: {', '.join(config.WATCHLIST)}")
-    logger.info(f"Trade Mode: {config.TRADE_MODE.upper()}")
-    
     order_params = {'leverage': config.MAX_LEVERAGE} if config.TRADE_MODE == "margin" else {}
-    
-    # State tracking: Stick to ONE active pair at a time
-    active_trade = None
-    entry_price = 0.0
-    entry_direction = 0  # 1 for long, -1 for short
 
     while True:
         try:
-            if active_trade is None:
-                logger.info(f"--- Scanning {len(config.WATCHLIST)} Pairs for Opportunities ---")
+            logger.info(f"--- Synchronizing State with Kraken & Analyzing {len(config.WATCHLIST)} Pairs ---")
+            
+            for symbol in config.WATCHLIST:
+                portfolio_state = await fetch_portfolio_state(exchange, symbol)
+                total_val, pnl, pos_size, _ = portfolio_state
                 
-                # Concurrently fetch observations for all margin pairs
-                tasks = [get_latest_observation(exchange, symbol) for symbol in config.WATCHLIST]
-                results = await asyncio.gather(*tasks, return_exceptions=True)
+                obs, current_price = await get_latest_observation(exchange, symbol, portfolio_state)
+                if obs is None: continue
                 
-                for i, symbol in enumerate(config.WATCHLIST):
-                    res = results[i]
-                    if isinstance(res, Exception):
-                        logger.error(f"Failed to fetch {symbol}: {res}")
-                        continue
-                        
-                    obs, current_price = res
-                    if obs is None: continue
+                # Action space: 0=Hold, 1=Buy 50%, 2=Buy 100%, 3=Sell 50%, 4=Sell 100%
+                action, _ = model.predict(obs, deterministic=True)
+                
+                # Spot Mode overrides (Prevent selling naked shorts)
+                if config.TRADE_MODE == "spot":
+                    if action in [3, 4] and pos_size < 0.05:
+                        action = 0 
+                
+                if action != 0:
+                    action_name = {1: "BUY 50%", 2: "BUY 100%", 3: "SELL 50%", 4: "SELL 100%"}[action]
+                    logger.info(f"🤖 [AI SIGNAL] {symbol} -> {action_name} at {current_price} | Portfolio Val: ${total_val:.2f} | Pos Size: {pos_size*100:.1f}%")
                     
-                    action, _ = model.predict(obs, deterministic=True)
-                    
-                    # Prevent naked shorting in Spot Mode
-                    if config.TRADE_MODE == "spot" and action == 2:
-                        continue # Ignore short signals in spot mode
-                        
-                    if action == 1:
-                        if config.TRADE_MODE == "margin":
-                            logger.info(f"🤖 [AI SIGNAL] {symbol} -> OPEN LONG at {current_price} (Leverage: {config.MAX_LEVERAGE}x)")
-                        else:
-                            logger.info(f"🤖 [AI SIGNAL] {symbol} -> BUY SPOT at {current_price}")
-                            
-                        active_trade = symbol
-                        entry_price = current_price
-                        entry_direction = 1
-                        
-                        if not config.DRY_RUN:
-                            try:
-                                await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params=order_params)
-                            except Exception as e:
-                                logger.error(f"Live trade failed: {e}")
-                                active_trade = None
-                        break  # Stop scanning once we find a trade!
-                        
-                    elif action == 2:
-                        logger.info(f"🤖 [AI SIGNAL] {symbol} -> OPEN SHORT at {current_price} (Leverage: {config.MAX_LEVERAGE}x)")
-                        active_trade = symbol
-                        entry_price = current_price
-                        entry_direction = -1
-                        
-                        if not config.DRY_RUN:
-                            try:
-                                await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params=order_params)
-                            except Exception as e:
-                                logger.error(f"Live trade failed: {e}")
-                                active_trade = None
-                        break  # Stop scanning once we find a trade!
-
-            else:
-                symbol = active_trade
-                logger.info(f"--- Monitoring Active Trade: {symbol} ---")
-                obs, current_price = await get_latest_observation(exchange, symbol)
-                
-                if obs is not None:
-                    # 2% Stop Loss Logic
-                    if entry_direction == 1 and current_price <= entry_price * (1 - config.STOP_LOSS_PCT):
-                        logger.warning(f"🚨 [STOP LOSS] {symbol} Long hit {config.STOP_LOSS_PCT*100}% loss at {current_price}. CLOSING POSITION.")
-                        action = 0
-                        stop_loss_triggered = True
-                    elif entry_direction == -1 and current_price >= entry_price * (1 + config.STOP_LOSS_PCT):
-                        logger.warning(f"🚨 [STOP LOSS] {symbol} Short hit {config.STOP_LOSS_PCT*100}% loss at {current_price}. CLOSING POSITION.")
-                        action = 0
-                        stop_loss_triggered = True
-                    else:
-                        stop_loss_triggered = False
-                        action, _ = model.predict(obs, deterministic=True)
-
-                    # Override short signals in spot mode
-                    if config.TRADE_MODE == "spot" and action == 2:
-                        action = 0  # Treat short signal as close position if we are long
-
-                    if action == 0 or stop_loss_triggered:
-                        if not stop_loss_triggered:
-                            logger.info(f"🤖 [AI SIGNAL] {symbol} -> CLOSE POSITION at {current_price}")
-                        
-                        if not config.DRY_RUN:
-                            try:
-                                if entry_direction == 1:
-                                    await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params=order_params)
-                                elif entry_direction == -1:
-                                    await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params=order_params)
-                            except Exception as e:
-                                logger.error(f"Live trade failed: {e}")
-                                
-                        active_trade = None
-                        entry_direction = 0
-                        
-                    elif action == 1 and entry_direction == -1:
-                        logger.info(f"🤖 [AI REVERSAL] {symbol} -> CLOSE SHORT, OPEN LONG at {current_price}")
-                        if not config.DRY_RUN:
-                            try:
-                                await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params=order_params)
-                                await exchange.create_market_buy_order(symbol, config.TRADE_AMOUNT_USD / current_price, params=order_params)
-                            except Exception as e:
-                                logger.error(f"Live trade failed: {e}")
-                        entry_price = current_price
-                        entry_direction = 1
-                        
-                    elif action == 2 and entry_direction == 1:
-                        logger.info(f"🤖 [AI REVERSAL] {symbol} -> CLOSE LONG, OPEN SHORT at {current_price}")
-                        if not config.DRY_RUN:
-                            try:
-                                await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params=order_params)
-                                await exchange.create_market_sell_order(symbol, config.TRADE_AMOUNT_USD / current_price, params=order_params)
-                            except Exception as e:
-                                logger.error(f"Live trade failed: {e}")
-                        entry_price = current_price
-                        entry_direction = -1
+                    if not config.DRY_RUN:
+                        # Dynamic execution
+                        amount_to_trade = config.TRADE_AMOUNT_USD / current_price
+                        try:
+                            if action in [1, 2]:
+                                await exchange.create_market_buy_order(symbol, amount_to_trade, params=order_params)
+                            elif action in [3, 4]:
+                                await exchange.create_market_sell_order(symbol, amount_to_trade, params=order_params)
+                        except Exception as e:
+                            logger.error(f"Live trade failed: {e}")
 
             logger.info(f"Sleeping for {config.POLL_INTERVAL} seconds...")
             await asyncio.sleep(config.POLL_INTERVAL)

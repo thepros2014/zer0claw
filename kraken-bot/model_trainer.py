@@ -4,7 +4,7 @@ import ccxt.async_support as ccxt
 import pandas as pd
 import logging
 from stable_baselines3 import PPO
-from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.common.vec_env import DummyVecEnv, VecFrameStack
 
 import config
 from trading_env import KrakenMarginEnv
@@ -67,6 +67,7 @@ async def train_model():
     combined_features = pd.concat(all_features, ignore_index=True)
     
     env = DummyVecEnv([lambda: KrakenMarginEnv(combined_features, max_leverage=config.MAX_LEVERAGE)])
+    env = VecFrameStack(env, n_stack=5)
     
     logger.info("Initializing PPO Neural Network...")
     model = PPO("MlpPolicy", env, verbose=1, learning_rate=0.0003)
