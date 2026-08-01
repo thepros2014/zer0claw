@@ -135,7 +135,7 @@
             <div class="stat-value text-blue" id="stat-open">0</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Estimated PnL</div>
+            <div class="stat-label">Portfolio Value</div>
             <div class="stat-value text-green" id="stat-pnl">$0.00</div>
         </div>
     </div>
@@ -174,7 +174,23 @@
                 document.getElementById('stat-status').innerText = data.status.toUpperCase();
                 document.getElementById('stat-lr').innerText = data.learning_rate;
                 document.getElementById('stat-open').innerText = data.open_positions;
-                document.getElementById('stat-pnl').innerText = '$' + parseFloat(data.pnl_usd).toFixed(2);
+                document.getElementById('stat-pnl').innerText = '$' + parseFloat(data.portfolio_value || 0).toFixed(2);
+                
+                if (data.signals && data.signals.length > 0) {
+                    const tbody = document.querySelector('table tbody');
+                    tbody.innerHTML = '';
+                    data.signals.forEach(sig => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>Just Now</td>
+                                <td style="font-weight: 700; color: ${sig.action.includes('BUY') ? '#10B981' : '#EF4444'}">${sig.action}</td>
+                                <td>${sig.symbol}</td>
+                                <td>High</td>
+                                <td>@ $${parseFloat(sig.price).toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+                }
             } catch (err) {
                 console.error("Error fetching stats:", err);
             }

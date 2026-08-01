@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from collections import deque
 import logging
+import json
 from stable_baselines3 import PPO
 
 import config
@@ -14,6 +15,17 @@ logger = logging.getLogger("kraken-bot")
 
 # Global observation buffer for frame stacking
 obs_buffer = {}
+
+# IPC Dashboard State
+bot_state = {
+    "status": "active",
+    "learning_rate": "0.0003",
+    "open_positions": 0,
+    "total_trades": 0,
+    "pnl_usd": 0.0,
+    "portfolio_value": 0.0,
+    "signals": []
+}
 
 async def fetch_portfolio_state(exchange, symbol):
     # Fetch actual balance and open positions from Kraken
@@ -120,9 +132,16 @@ async def main():
         try:
             logger.info(f"--- Synchronizing State with Kraken & Analyzing {len(config.WATCHLIST)} Pairs ---")
             
+            bot_state["open_positions"] = 0
+            current_signals = []
+            
             for symbol in config.WATCHLIST:
                 portfolio_state = await fetch_portfolio_state(exchange, symbol)
-                total_val, pnl, pos_size, _ = portfolio_state
+                total_val, pnl, pos_size, current_price = portfolio_state
+                
+                bot_state["portfolio_value"] = total_val
+                if pos_size > 0.05:
+                    bot_state["open_positions"] += 1
                 
                 obs, current_price = await get_latest_observation(exchange, symbol, portfolio_state)
                 if obs is None: continue
@@ -138,6 +157,8 @@ async def main():
                 
                 if action != 0:
                     action_name = {1: "BUY 50%", 2: "BUY 100%", 3: "SELL 50%", 4: "SELL 100%"}[action]
+                    bot_state["total_trades"] += 1
+                    current_signals.append({"symbol": symbol, "action": action_name, "price": current_price})
                     logger.info(f"🤖 [AI SIGNAL] {symbol} -> {action_name} at {current_price} | Portfolio Val: ${total_val:.2f} | Pos Size: {pos_size*100:.1f}%")
                     
                     if not config.DRY_RUN:
@@ -185,6 +206,12 @@ async def main():
                                 await exchange.create_market_sell_order(symbol, amount_to_trade, params=order_params)
                         except Exception as e:
                             logger.error(f"Live trade failed: {e}")
+
+            bot_state["signals"] = current_signals
+            
+            state_file = os.path.join(os.path.dirname(__file__), "state.json")
+            with open(state_file, "w") as f:
+                json.dump(bot_state, f)
 
             logger.info(f"Sleeping for {config.POLL_INTERVAL} seconds...")
             await asyncio.sleep(config.POLL_INTERVAL)

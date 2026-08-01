@@ -92,11 +92,20 @@ async def save_setup(config: Dict[str, Any]):
 
 @app.get("/api/v1/dashboard/stats", tags=["Dashboard"])
 async def get_dashboard_stats():
-    # Placeholder for real trading stats from bot
+    state_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "kraken-bot", "state.json"))
+    if os.path.exists(state_file):
+        try:
+            with open(state_file, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Error reading bot state: {e}")
+            
     return {
-        "status": "active",
-        "learning_rate": "0.0003",
-        "open_positions": 1,
-        "total_trades": 12,
-        "pnl_usd": 45.20
+        "status": "offline",
+        "learning_rate": "-",
+        "open_positions": 0,
+        "total_trades": 0,
+        "pnl_usd": 0.0,
+        "portfolio_value": 0.0,
+        "signals": []
     }
