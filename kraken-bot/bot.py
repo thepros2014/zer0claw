@@ -150,10 +150,10 @@ async def main():
                 action, _ = model.predict(obs, deterministic=True)
                 action = int(action.item() if hasattr(action, 'item') else action)
                 
-                # Spot Mode overrides (Prevent selling naked shorts)
-                if config.TRADE_MODE == "spot":
-                    if action in [3, 4] and pos_size < 0.05:
-                        action = 0 
+                if action != 0 and action in [3, 4] and pos_size < 0.05:
+                    # Determine if we should allow naked shorting based on TRADE_MODE
+                    if config.TRADE_MODE == "spot":
+                        action = 0
                 
                 if action != 0:
                     action_name = {1: "BUY 50%", 2: "BUY 100%", 3: "SELL 50%", 4: "SELL 100%"}[action]
@@ -200,10 +200,27 @@ async def main():
 
                             if action in [1, 2]:
                                 logger.info(f"Executing Buy Order for {amount_to_trade} {base_asset}")
-                                await exchange.create_market_buy_order(symbol, amount_to_trade, params=order_params)
+                                try:
+                                    await exchange.create_market_buy_order(symbol, amount_to_trade, params=order_params)
+                                except Exception as e:
+                                    if "Non-ECP" in str(e) or "Margin" in str(e):
+                                        logger.warning(f"Margin BUY rejected ({e}). Falling back to SPOT execution...")
+                                        await exchange.create_market_buy_order(symbol, amount_to_trade, params={})
+                                    else:
+                                        raise e
                             elif action in [3, 4]:
                                 logger.info(f"Executing Sell Order for {amount_to_trade} {base_asset}")
-                                await exchange.create_market_sell_order(symbol, amount_to_trade, params=order_params)
+                                try:
+                                    await exchange.create_market_sell_order(symbol, amount_to_trade, params=order_params)
+                                except Exception as e:
+                                    if "Non-ECP" in str(e) or "Margin" in str(e):
+                                        logger.warning(f"Margin SELL rejected ({e}). Falling back to SPOT execution...")
+                                        if pos_size < 0.05:
+                                            logger.warning(f"Cannot fallback to SPOT Short since base balance is 0. Skipping.")
+                                        else:
+                                            await exchange.create_market_sell_order(symbol, amount_to_trade, params={})
+                                    else:
+                                        raise e
                         except Exception as e:
                             logger.error(f"Live trade failed: {e}")
 

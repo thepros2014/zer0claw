@@ -23,7 +23,9 @@ KRAKEN_API_KEY = master_cfg.get("kraken_api_key") or os.getenv("KRAKEN_API_KEY",
 KRAKEN_API_SECRET = master_cfg.get("kraken_api_secret") or os.getenv("KRAKEN_API_SECRET", "")
 
 # AI Margin Bot Settings
-TRADE_MODE = os.getenv("TRADE_MODE", "spot").lower() # "spot" or "margin"
+# TRADE_MODE can be "spot" or "margin". 
+# The bot will automatically fallback to spot if a margin trade is rejected (e.g. Non-ECP).
+TRADE_MODE = "margin"
 MAX_LEVERAGE = int(master_cfg.get("kraken_max_leverage", os.getenv("KRAKEN_MAX_LEVERAGE", "10")))
 WATCHLIST = ["BTC/USD", "ETH/USD", "SOL/USD", "CSPR/USD", "CAP/USD", "XRP/USD", "ADA/USD", "DOGE/USD", "DOT/USD", "POL/USD"]
 MEMORY_BANK_LIMIT_GB = 2.0
