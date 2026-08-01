@@ -58,7 +58,10 @@ async def main():
     logger.info("Loading Neural Network AI Brain...")
     model = PPO.load(model_path)
 
-    logger.info(f"Watchlist: {', '.join(config.WATCHLIST)}")
+    await exchange.load_markets()
+    all_pairs = [s for s, m in exchange.markets.items() if m.get('margin', False) and '/USD' in s and m.get('active', True)]
+    
+    logger.info(f"Dynamic Scanning Enabled. Discovered {len(all_pairs)} active USD margin pairs on Kraken.")
     
     # State tracking: Stick to ONE active pair at a time
     active_trade = None
@@ -68,13 +71,13 @@ async def main():
     while True:
         try:
             if active_trade is None:
-                logger.info("--- Scanning Watchlist for Opportunities ---")
+                logger.info(f"--- Scanning {len(all_pairs)} Pairs for Opportunities ---")
                 
-                # Concurrently fetch observations for all pairs in watchlist
-                tasks = [get_latest_observation(exchange, symbol) for symbol in config.WATCHLIST]
+                # Concurrently fetch observations for all margin pairs
+                tasks = [get_latest_observation(exchange, symbol) for symbol in all_pairs]
                 results = await asyncio.gather(*tasks, return_exceptions=True)
                 
-                for i, symbol in enumerate(config.WATCHLIST):
+                for i, symbol in enumerate(all_pairs):
                     res = results[i]
                     if isinstance(res, Exception):
                         logger.error(f"Failed to fetch {symbol}: {res}")

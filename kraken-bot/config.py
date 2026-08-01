@@ -24,7 +24,7 @@ KRAKEN_API_SECRET = master_cfg.get("kraken_api_secret") or os.getenv("KRAKEN_API
 
 # AI Margin Bot Settings
 MAX_LEVERAGE = int(master_cfg.get("kraken_max_leverage", os.getenv("KRAKEN_MAX_LEVERAGE", "5")))
-WATCHLIST = ["BTC/USD", "ETH/USD", "SOL/USD", "XRP/USD", "ADA/USD"]
+MEMORY_BANK_LIMIT_GB = 2.0
 STOP_LOSS_PCT = 0.02  # 2% stop loss
 
 TRADE_AMOUNT_USD = float(os.getenv("TRADE_AMOUNT_USD", "10.0")) # Dollar value per trade for testing
