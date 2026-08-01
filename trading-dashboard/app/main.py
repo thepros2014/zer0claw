@@ -136,7 +136,11 @@ async def handle_chat(payload: ChatMessage):
             if tags_res.status_code == 200:
                 models = tags_res.json().get("models", [])
                 if models:
-                    model_name = models[0]["name"]
+                    model_names = [m["name"] for m in models]
+                    stable_models = [m for m in model_names if "dolphin" in m.lower() or "eve" in m.lower() or "llama" in m.lower() or "phi" in m.lower()]
+                    other_models = [m for m in model_names if m not in stable_models]
+                    prioritized_models = stable_models + other_models
+
                     context_str = f"Current Portfolio Value: ${bot_state.get('portfolio_value', 0):.2f}, Open Positions: {bot_state.get('open_positions', 0)}, Status: {bot_state.get('status', 'offline')}."
                     if bot_state.get("signals"):
                         recent = ", ".join([f"{s['action']} on {s['symbol']}" for s in bot_state["signals"]])
@@ -148,29 +152,36 @@ If the user gives a command to control the bot (e.g. 'pause', 'resume', 'liquida
 
 User: {payload.message}
 Assistant:"""
-                    
-                    chat_res = await client.post(f"{ollama_url}/api/generate", json={
-                        "model": model_name,
-                        "prompt": prompt,
-                        "stream": False
-                    }, timeout=30.0)
-                    
-                    if chat_res.status_code == 200:
-                        full_reply = chat_res.json().get("response", "...")
-                        
-                        # Intercept commands
-                        cmd_match = re.search(r'\[COMMAND:\s*(\{.*?\})\s*\]', full_reply)
-                        if cmd_match:
-                            try:
-                                cmd_json = json.loads(cmd_match.group(1))
-                                cmds_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "kraken-bot", "commands.json"))
-                                with open(cmds_file, "w") as cf:
-                                    json.dump(cmd_json, cf)
-                                full_reply = full_reply.replace(cmd_match.group(0), "").strip()
-                            except Exception as e:
-                                logger.error(f"Failed to parse command JSON: {e}")
+
+                    for model_name in prioritized_models:
+                        try:
+                            chat_res = await client.post(f"{ollama_url}/api/generate", json={
+                                "model": model_name,
+                                "prompt": prompt,
+                                "stream": False
+                            }, timeout=30.0)
+                            
+                            if chat_res.status_code == 200:
+                                full_reply = chat_res.json().get("response", "...")
                                 
-                        return {"reply": full_reply}
+                                # Intercept commands
+                                cmd_match = re.search(r'\[COMMAND:\s*(\{.*?\})\s*\]', full_reply)
+                                if cmd_match:
+                                    try:
+                                        cmd_json = json.loads(cmd_match.group(1))
+                                        cmds_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "kraken-bot", "commands.json"))
+                                        with open(cmds_file, "w") as cf:
+                                            json.dump(cmd_json, cf)
+                                        full_reply = full_reply.replace(cmd_match.group(0), "").strip()
+                                    except Exception as e:
+                                        logger.error(f"Failed to parse command JSON: {e}")
+                                        
+                                return {"reply": full_reply}
+                            else:
+                                logger.warning(f"Ollama model {model_name} returned status {chat_res.status_code}, trying next model...")
+                        except Exception as e:
+                            logger.warning(f"Ollama model {model_name} failed: {e}")
+                            
     except Exception as e:
         logger.warning(f"Ollama local LLM not reachable, falling back to basic rules: {e}")
 
