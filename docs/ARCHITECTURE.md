@@ -25,11 +25,34 @@
                 │                               │
                 ▼ (WAKI HTTP RPC)               ▼ (CoinGecko Feed)
        [ Solana Blockchain ]          [ Cost-Basis CSV Ledger ]
+
+---
+
+## 2. Kraken AI Dual-Architecture Add-on
+
+```text
+       [ AI Trading Operations / Port 8001 ]
+                               │
+                               ▼
+        [ Kraken AI Trading Dashboard & Gateway ]
+                               │
+        ├──( POST /setup/save )► [ Shared config.json State ]
+        ├──( GET /dashboard )──► [ Live Neural Network Telemetry ]
+        │
+        └───────┬──────────────────────────────────────┐
+                ▼                                      ▼
+    ┌───────────────────────┐              ┌───────────────────────┐
+    │ kraken-bot (Live)     │              │ model_trainer (Batch) │
+    │ (Order Execution)     │              │ (PPO PyTorch Model)   │
+    └───────────┬───────────┘              └───────────┬───────────┘
+                │                                      │
+                ▼ (REST/WS)                            ▼
+        [ Kraken Exchange API ]              [ Historical Market Data ]
 ```
 
 ---
 
-## 2. Security Defense Layers
+## 3. Security Defense Layers
 
 1. **Tier 1 Zero-Key Custody**: Server process holds zero private keys.
 2. **WASM Sandbox Isolation**: Strict capabilities defined in `zeroclaw.toml`.
