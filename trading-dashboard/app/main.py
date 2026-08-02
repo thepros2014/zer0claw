@@ -4,6 +4,8 @@ import time
 from typing import Any, Dict
 import re
 import httpx
+import base64
+import edge_tts
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -46,6 +48,19 @@ async def health_check():
         "service": "kraken-ai-gateway",
         "timestamp": int(time.time()),
     }
+
+async def generate_speech_base64(text: str, voice: str = "en-US-ChristopherNeural") -> str:
+    try:
+        communicate = edge_tts.Communicate(text, voice)
+        audio_data = bytearray()
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_data.extend(chunk["data"])
+        if audio_data:
+            return base64.b64encode(audio_data).decode("utf-8")
+    except Exception as e:
+        logger.error(f"TTS generation failed: {e}")
+    return ""
 
 @app.get("/", tags=["Dashboard"])
 @app.get("/dashboard", tags=["Dashboard"])
@@ -114,6 +129,7 @@ async def get_dashboard_stats():
 
 class ChatMessage(BaseModel):
     message: str
+    voice: str = "en-US-ChristopherNeural"
 
 @app.post("/api/v1/chat", tags=["Dashboard"])
 async def handle_chat(payload: ChatMessage):
@@ -180,7 +196,8 @@ Assistant:"""
                                     except Exception as e:
                                         logger.error(f"Failed to parse command JSON: {e}")
                                         
-                                return {"reply": full_reply}
+                                audio_b64 = await generate_speech_base64(full_reply, payload.voice)
+                                return {"reply": full_reply, "audio_base64": audio_b64}
                             else:
                                 logger.warning(f"Ollama model {model_name} returned status {chat_res.status_code}, trying next model...")
                         except Exception as e:
@@ -209,5 +226,6 @@ Assistant:"""
             recent = ", ".join([f"{s['action']} on {s['symbol']}" for s in signals])
             response_text = f"Recent AI signals: {recent}."
             
-    return {"reply": response_text}
+    audio_b64 = await generate_speech_base64(response_text, payload.voice)
+    return {"reply": response_text, "audio_base64": audio_b64}
 

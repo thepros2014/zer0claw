@@ -219,7 +219,14 @@
         <div class="main-panel chat-panel">
             <div class="panel-title">
                 <span>AI Assistant</span>
-                <span class="status-badge" style="background: rgba(58, 134, 255, 0.15); color: var(--ai-blue);">● Ready</span>
+                <div>
+                    <select id="voice-select" style="background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--panel-border); border-radius: 4px; padding: 0.2rem; margin-right: 0.5rem; font-size: 0.8rem; outline: none;">
+                        <option value="en-US-ChristopherNeural">Christopher (Male)</option>
+                        <option value="en-US-JennyNeural">Jenny (Female)</option>
+                    </select>
+                    <button id="btn-mute" onclick="toggleMute()" style="background:none; border:none; color:white; cursor:pointer; font-size:1.2rem; margin-right: 0.5rem;" title="Toggle AI Voice">🔊</button>
+                    <span class="status-badge" style="background: rgba(58, 134, 255, 0.15); color: var(--ai-blue);">● Ready</span>
+                </div>
             </div>
             <div class="chat-history" id="chat-history">
                 <div class="chat-msg ai-msg">Hello! I am your AI Trading Assistant. Ask me about your portfolio, status, profit, or recent signals!</div>
@@ -273,16 +280,22 @@
             input.value = '';
             history.scrollTop = history.scrollHeight;
             
+            const voiceId = document.getElementById('voice-select').value;
             try {
                 const res = await fetch('/api/v1/chat', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({message: msg})
+                    body: JSON.stringify({message: msg, voice: voiceId})
                 });
                 const data = await res.json();
                 
                 history.innerHTML += `<div class="chat-msg ai-msg">${data.reply}</div>`;
                 history.scrollTop = history.scrollHeight;
+                
+                if (data.audio_base64 && !isMuted) {
+                    let audio = new Audio("data:audio/mp3;base64," + data.audio_base64);
+                    audio.play();
+                }
             } catch (err) {
                 history.innerHTML += `<div class="chat-msg ai-msg" style="color:#EF4444">Error connecting to AI backend.</div>`;
             }
@@ -291,6 +304,12 @@
         document.getElementById('chat-input').addEventListener('keypress', function(e) {
             if(e.key === 'Enter') sendChat();
         });
+        
+        let isMuted = false;
+        function toggleMute() {
+            isMuted = !isMuted;
+            document.getElementById('btn-mute').innerText = isMuted ? "🔇" : "🔊";
+        }
     </script>
 </body>
 </html>
