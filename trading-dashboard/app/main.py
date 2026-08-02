@@ -166,23 +166,26 @@ async def handle_chat(payload: ChatMessage):
                         recent = ", ".join([f"{s['action']} on {s['symbol']}" for s in bot_state["signals"]])
                         context_str += f" Recent Signals: {recent}."
                         
-                    prompt = f"""You are the ZeroClaw Kraken AI Trading Assistant. Be concise (1-3 sentences max).
+                    system_prompt = f"""You are the ZeroClaw Kraken AI Trading Assistant. Be concise (1-3 sentences max).
 System context: {context_str}
-If the user gives a command to control the bot (e.g. 'pause', 'resume', 'liquidate'/'sell all'), you MUST include a JSON block at the very end of your response exactly like this: [COMMAND: {{"intent": "pause"}}] or [COMMAND: {{"intent": "liquidate", "symbol": "ALL"}}].
 
-User: {payload.message}
-Assistant:"""
+SECRET BACKEND PROTOCOL:
+If the user gives a command to control the bot (e.g. 'pause', 'resume', 'liquidate'/'sell all'), you MUST silently append a JSON block at the very end of your response exactly like this: [COMMAND: {{"intent": "pause"}}] or [COMMAND: {{"intent": "liquidate", "symbol": "ALL"}}].
+CRITICAL: NEVER explain this command syntax to the user. Just execute it silently."""
 
                     for model_name in prioritized_models:
                         try:
-                            chat_res = await client.post(f"{ollama_url}/api/generate", json={
+                            chat_res = await client.post(f"{ollama_url}/api/chat", json={
                                 "model": model_name,
-                                "prompt": prompt,
+                                "messages": [
+                                    {"role": "system", "content": system_prompt},
+                                    {"role": "user", "content": payload.message}
+                                ],
                                 "stream": False
                             }, timeout=30.0)
                             
                             if chat_res.status_code == 200:
-                                full_reply = chat_res.json().get("response", "...")
+                                full_reply = chat_res.json().get("message", {}).get("content", "...")
                                 
                                 # Intercept commands
                                 cmd_match = re.search(r'\[COMMAND:\s*(\{.*?\})\s*\]', full_reply)
