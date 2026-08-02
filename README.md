@@ -1,6 +1,7 @@
 # ZeroClaw Commerce & ZeroClaw Kraken Automagic Trading Bot 
 
-One multi-channel intergration and the other fully local and using the same framework at the same time!🛡️
+2 separate dashboards, 2 completely separate servies
+One multi-channel integration, the other fully local, while using the same framework running at the same time!🛡️
 
 ![ZeroClaw Framework](https://img.shields.io/badge/Framework-ZeroClaw-blue)
 ![Solana](https://img.shields.io/badge/Blockchain-Solana-14F195?logo=solana&logoColor=black)
