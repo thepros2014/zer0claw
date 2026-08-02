@@ -1,4 +1,4 @@
-# ZeroClaw Commerce 🛡️
+# ZeroClaw Commerce & ZeroClaw trading bot all local running at the same time!🛡️
 
 ![ZeroClaw Framework](https://img.shields.io/badge/Framework-ZeroClaw-blue)
 ![Solana](https://img.shields.io/badge/Blockchain-Solana-14F195?logo=solana&logoColor=black)
