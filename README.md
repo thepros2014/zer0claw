@@ -1,8 +1,6 @@
 # ZeroClaw Commerce 🛡️
 
 > *Zero-key payment, tax accounting, conversational AI cashier, and digital fulfillment platform built on the ZeroClaw agent ecosystem.*
-> 
-> *Available in two distinct deployments: one integrated with Telegram for remote interaction, and another completely local instance running the exact same core programming at the same time.*
 
 ![ZeroClaw Framework](https://img.shields.io/badge/Framework-ZeroClaw-blue)
 ![Solana](https://img.shields.io/badge/Blockchain-Solana-14F195?logo=solana&logoColor=black)
