@@ -2,6 +2,8 @@
 
 > *Zero-key payment, tax accounting, conversational AI cashier, and digital fulfillment platform built on the ZeroClaw agent ecosystem.*
 
+Let your AI agent sell digital products and accept crypto — without ever holding a private key.
+
 ![ZeroClaw Framework](https://img.shields.io/badge/Framework-ZeroClaw-blue)
 ![Solana](https://img.shields.io/badge/Blockchain-Solana-14F195?logo=solana&logoColor=black)
 ![Architecture](https://img.shields.io/badge/Architecture-wasm32--wasip2-orange)
