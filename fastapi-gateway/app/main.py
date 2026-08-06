@@ -158,7 +158,7 @@ async def verify_admin_pin(payload: Dict[str, Any]):
         except Exception:
             pass
 
-    is_valid = (pin == saved_pin or pin == "123456")
+    is_valid = (pin == saved_pin)
     logger.info({"event": "pin_verification", "valid": is_valid})
     return {"valid": is_valid}
 
@@ -216,10 +216,10 @@ async def get_dashboard_stats():
     total_brl = total_usd * 5.50
 
     return {
-        "total_usd": total_usd + 1249.50,
-        "total_brl": total_brl + 6872.25,
-        "total_invoices": total_invoices + 42,
-        "total_fulfilled": len(paid_invoices) + 42,
+        "total_usd": round(total_usd, 2),
+        "total_brl": round(total_brl, 2),
+        "total_invoices": total_invoices,
+        "total_fulfilled": len(paid_invoices),
         "active_channels": ["telegram", "whatsapp", "discord"],
         "wasm_status": "fail-closed-active",
     }
