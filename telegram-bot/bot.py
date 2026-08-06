@@ -24,7 +24,7 @@ load_dotenv()
 # Configuration
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
 GATEWAY_URL = os.getenv("GATEWAY_URL", "http://localhost:8000")
-MERCHANT_WALLET = os.getenv("MERCHANT_WALLET", "FWuAvPKkLxzG47Rygu19NAHLNjUt3y65xyH3NHBwKZUM")
+MERCHANT_WALLET = os.getenv("MERCHANT_WALLET", "CCT4Shpihooq4DVSfVtjRkUa2rZ2NmYYcuGbPppqdELs")
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",

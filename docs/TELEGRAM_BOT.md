@@ -13,7 +13,7 @@
    ```env
    TELEGRAM_BOT_TOKEN="your_bot_token"
    GATEWAY_URL="http://localhost:8000"
-   MERCHANT_WALLET="DestWallet11111111111111111111111111111111"
+   MERCHANT_WALLET="CCT4Shpihooq4DVSfVtjRkUa2rZ2NmYYcuGbPppqdELs"
    ```
 
 ### 2. Direct Conversational AI Chat (Buyer-Side Interaction) 💬

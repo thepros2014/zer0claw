@@ -85,7 +85,7 @@ fn main() {
             println!("\n[WALLET INTERCEPTOR TRIGGERED]");
 
             let args = json!({
-                "destination_address": "DestWallet11111111111111111111111111111111",
+                "destination_address": "CCT4Shpihooq4DVSfVtjRkUa2rZ2NmYYcuGbPppqdELs",
                 "amount": 50.0,
                 "semantic_intent": "Paying vendor for software services",
                 "security_policy": "MAX_SPEND=100"
@@ -100,7 +100,7 @@ fn main() {
 
             thread::sleep(Duration::from_millis(1500));
             let acct_args = json!({
-                "wallet_address": "DestWallet11111111111111111111111111111111",
+                "wallet_address": "CCT4Shpihooq4DVSfVtjRkUa2rZ2NmYYcuGbPppqdELs",
                 "crypto_symbol": "usd-coin",
                 "amount_crypto": 50.0,
                 "tax_category": "Service Revenue"
