@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zeroclaw-commerce"
+version = "1.1.0"
+description = "Zero-key Solana Pay gateway, dual-currency tax accounting, conversational AI cashier, and digital fulfillment platform."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "thepros2014", email = "https://github.com/thepros2014" }]
+requires-python = ">=3.10"
+keywords = [
+    "solana",
+    "crypto",
+    "payment",
+    "fastapi",
+    "telegram",
+    "commerce",
+    "zeroclaw",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+]
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.28.0",
+    "pydantic>=2.6.0",
+    "httpx>=0.27.0",
+    "python-dotenv>=1.0.0",
+    "python-telegram-bot[job-queue]>=20.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/thepros2014/zer0claw"
+Repository = "https://github.com/thepros2014/zer0claw"
+"Bug Tracker" = "https://github.com/thepros2014/zer0claw/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["zeroclaw_gateway*", "zeroclaw_bot*"]
+
+[tool.setuptools.package-data]
+"zeroclaw_gateway.app.static" = ["*.html"]
