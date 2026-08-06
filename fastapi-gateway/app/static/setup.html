@@ -128,13 +128,13 @@
 
             <div class="form-group">
                 <label for="merchant_wallet">Solana Receiving Wallet Address</label>
-                <input type="text" id="merchant_wallet" value="CCT4Shpihooq4DVSfVtjRkUa2rZ2NmYYcuGbPppqdELs" required>
+                <input type="text" id="merchant_wallet" placeholder="Enter your Solana wallet address" required>
             </div>
 
             <!-- Admin PIN Setup -->
             <div class="form-group">
                 <label for="admin_pin">Create 6-Digit Admin Security PIN</label>
-                <input type="password" id="admin_pin" value="123456" maxlength="6" pattern="\d{6}" required>
+                <input type="password" id="admin_pin" placeholder="••••••" maxlength="6" pattern="\d{6}" required>
                 <p style="font-size:0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Required to unlock Tax CSV exports & Admin controls in the dashboard.</p>
             </div>
 
@@ -176,7 +176,7 @@
                     </select>
                 </div>
                 <div id="fields_whatsapp" style="display: none;">
-                    <input type="text" id="token_whatsapp" placeholder="WhatsApp Verify Token" value="solona_secure_verify_token">
+                    <input type="text" id="token_whatsapp" placeholder="WhatsApp Verify Token">
                 </div>
             </div>
 
