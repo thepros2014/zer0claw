@@ -1,5 +1,0 @@
-include README.md
-include pyproject.toml
-recursive-include zeroclaw_gateway *.py *.html *.txt
-recursive-include zeroclaw_bot *.py *.txt
-include download_model.py
