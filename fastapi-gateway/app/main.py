@@ -107,9 +107,18 @@ async def get_setup_status():
     return {"setup_completed": False}
 
 
+def _hash_pin(raw_pin: str) -> str:
+    """Returns a SHA-256 hex digest of the PIN. One-way — the raw value is never stored."""
+    return hashlib.sha256(raw_pin.encode()).hexdigest()
+
+
 @app.post("/api/v1/setup/save", tags=["Setup"])
 async def save_merchant_setup(config: Dict[str, Any]):
     """Saves merchant setup configuration to disk and initializes environment safely without logging raw secrets."""
+    # Hash the admin PIN before persisting so the raw value is never written to disk.
+    if "admin_pin" in config and config["admin_pin"]:
+        config["admin_pin"] = _hash_pin(str(config["admin_pin"]))
+
     config["setup_completed"] = True
     config["updated_at"] = int(time.time())
 
@@ -146,19 +155,32 @@ async def save_merchant_setup(config: Dict[str, Any]):
 
 @app.post("/api/v1/auth/verify-pin", tags=["Auth"])
 async def verify_admin_pin(payload: Dict[str, Any]):
-    """Verifies the 6-Digit Admin Security PIN without logging raw credentials."""
+    """Verifies the 6-Digit Admin Security PIN by comparing SHA-256 hashes — the raw PIN is never logged or stored."""
     pin = str(payload.get("pin", ""))
-    saved_pin = "123456"
-    if os.path.exists(CONFIG_FILE):
-        try:
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                if "admin_pin" in data:
-                    saved_pin = str(data["admin_pin"])
-        except Exception:
-            pass
+    if not pin:
+        logger.info({"event": "pin_verification", "valid": False, "reason": "empty_pin"})
+        return {"valid": False}
 
-    is_valid = (pin == saved_pin or pin == "123456")
+    submitted_hash = _hash_pin(pin)
+    saved_hash: str | None = None
+
+    for cfg in [CONFIG_FILE, ROOT_CONFIG_FILE]:
+        if os.path.exists(cfg):
+            try:
+                with open(cfg, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if "admin_pin" in data:
+                        saved_hash = str(data["admin_pin"])
+                        break
+            except Exception:
+                pass
+
+    if saved_hash is None:
+        # No PIN configured yet — deny access until setup is complete.
+        logger.info({"event": "pin_verification", "valid": False, "reason": "no_pin_configured"})
+        return {"valid": False}
+
+    is_valid = (submitted_hash == saved_hash)
     logger.info({"event": "pin_verification", "valid": is_valid})
     return {"valid": is_valid}
 
@@ -216,10 +238,10 @@ async def get_dashboard_stats():
     total_brl = total_usd * 5.50
 
     return {
-        "total_usd": total_usd + 1249.50,
-        "total_brl": total_brl + 6872.25,
-        "total_invoices": total_invoices + 42,
-        "total_fulfilled": len(paid_invoices) + 42,
+        "total_usd": round(total_usd, 2),
+        "total_brl": round(total_brl, 2),
+        "total_invoices": total_invoices,
+        "total_fulfilled": len(paid_invoices),
         "active_channels": ["telegram", "whatsapp", "discord"],
         "wasm_status": "fail-closed-active",
     }

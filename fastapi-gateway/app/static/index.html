@@ -570,16 +570,9 @@
                     clearPin();
                 }
             } catch (err) {
-                // Fallback demo validation (Default PIN: 123456)
-                if (currentPin === '123456') {
-                    closePinModal();
-                    if (pendingAction === 'export') exportCSV();
-                    else if (pendingAction === 'config') window.location.href = '/setup';
-                    else if (pendingAction === 'inventory') openInventoryModal();
-                } else {
-                    alert('❌ Invalid Admin PIN.');
-                    clearPin();
-                }
+                // Fallback: if gateway is unreachable, deny access — never accept a hardcoded default.
+                alert('❌ Cannot verify PIN: gateway is unreachable. Please ensure the server is running.');
+                clearPin();
             }
         }
 

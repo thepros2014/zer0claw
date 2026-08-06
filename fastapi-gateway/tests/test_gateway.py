@@ -43,9 +43,20 @@ def test_create_invoice_policy_violation():
 
 
 def test_verify_payment_success():
+    # First create a real invoice so it exists in the store
+    create_payload = {
+        "merchant_wallet": "DestWallet11111111111111111111111111111111",
+        "amount_crypto": 2.0,
+        "crypto_symbol": "solana",
+        "semantic_intent": "Paying for SOL service",
+    }
+    create_resp = client.post("/api/v1/invoices/create", json=create_payload)
+    assert create_resp.status_code == 201
+    invoice_id = create_resp.json()["invoice_id"]
+
     payload = {
-        "invoice_id": "inv_test123",
-        "signature": "sig_mock_solana_signature_9999",
+        "invoice_id": invoice_id,
+        "signature": "sig_mock_solana_signature_999900aa",  # ≥32 chars, starts with sig_
         "merchant_wallet": "DestWallet11111111111111111111111111111111",
         "amount_crypto": 2.0,
         "crypto_symbol": "solana",
@@ -62,8 +73,30 @@ def test_verify_payment_success():
 
 
 def test_digital_fulfillment_success():
+    # Create and pay an invoice so fulfillment can proceed
+    create_payload = {
+        "merchant_wallet": "DestWallet11111111111111111111111111111111",
+        "amount_crypto": 1.0,
+        "crypto_symbol": "usd-coin",
+        "semantic_intent": "Paying for digital license",
+    }
+    create_resp = client.post("/api/v1/invoices/create", json=create_payload)
+    assert create_resp.status_code == 201
+    invoice_id = create_resp.json()["invoice_id"]
+
+    verify_payload = {
+        "invoice_id": invoice_id,
+        "signature": "sig_fulfill_test_signature_00aa00",  # ≥32 chars, starts with sig_
+        "merchant_wallet": "DestWallet11111111111111111111111111111111",
+        "amount_crypto": 1.0,
+        "crypto_symbol": "usd-coin",
+        "tax_category": "Service Revenue",
+    }
+    verify_resp = client.post("/api/v1/payments/verify", json=verify_payload)
+    assert verify_resp.status_code == 200
+
     payload = {
-        "invoice_id": "inv_test123",
+        "invoice_id": invoice_id,
         "customer_id": "user_telegram_445921",
         "channel": "telegram",
         "digital_item_sku": "SKU_PRO_LICENSE_2026",
