@@ -1,0 +1,20 @@
+[node]
+name = "ZeroClaw Tax Terminal"
+version = "1.0.0"
+
+[plugins]
+dir = "plugins"
+
+[[plugins.permissions]]
+plugin = "zeroclaw_solana"
+allow = ["http_client"]
+
+[[plugins.permissions]]
+plugin = "zeroclaw_accounting"
+allow = ["http_client"]
+
+[enterprise_settings]
+# Mock configuration for Tier 2 Bulk Queue / Multisig Architecture
+squads_vault_address = "SQDS4ep65T869zXYMM2dCbxtBG65zBma5p8m3dKqJ7T"
+require_hardware_wallet_interceptor = true
+tax_reporting_currency = "USD,BRL"
