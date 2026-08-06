@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-wasm:
+    name: Build WASM Plugins
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasip2
+
+      - name: Build WASM plugins
+        run: cargo build --release --package zeroclaw-solana --package zeroclaw-accounting --target wasm32-wasip2
+
+      - name: Stage release artifacts
+        run: |
+          mkdir -p release-artifacts/plugins
+          cp target/wasm32-wasip2/release/zeroclaw_solana.wasm    release-artifacts/plugins/
+          cp target/wasm32-wasip2/release/zeroclaw_accounting.wasm release-artifacts/plugins/
+          cp dist/enterprise_zeroclaw_node/zeroclaw.toml           release-artifacts/
+          cp install_bots.ps1                                       release-artifacts/
+          cp enterprise_install.sh                                  release-artifacts/
+          cp enterprise_install.ps1                                 release-artifacts/
+          cp Start_ZeroClaw_Commerce.cmd                            release-artifacts/
+          cp start_all.sh                                           release-artifacts/
+          cp start_all.ps1                                          release-artifacts/
+          cd release-artifacts
+          zip -r ../zeroclaw-runtime-${{ github.ref_name }}.zip .
+          cd ..
+          sha256sum zeroclaw-runtime-${{ github.ref_name }}.zip > zeroclaw-runtime-${{ github.ref_name }}.zip.sha256
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-release
+          path: |
+            zeroclaw-runtime-*.zip
+            zeroclaw-runtime-*.zip.sha256
+
+  release:
+    name: Create GitHub Release
+    needs: build-wasm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-release
+          path: dist-out
+
+      - name: Create Release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          name: ZeroClaw Runtime ${{ github.ref_name }}
+          body: |
+            ## ZeroClaw Runtime ${{ github.ref_name }}
+
+            ### Artifacts
+            | File | Description |
+            |------|-------------|
+            | `zeroclaw-runtime-${{ github.ref_name }}.zip` | Full runtime bundle — WASM plugins + launcher scripts |
+            | `zeroclaw-runtime-${{ github.ref_name }}.zip.sha256` | SHA-256 checksum |
+
+            ### Contents
+            - `plugins/zeroclaw_solana.wasm` — Token risk engine & durable nonce helper (wasm32-wasip2)
+            - `plugins/zeroclaw_accounting.wasm` — Dual-currency tax log (wasm32-wasip2)
+            - `zeroclaw.toml` — Default node configuration
+            - Launcher scripts for Windows (`Start_ZeroClaw_Commerce.cmd`, `start_all.ps1`, `install_bots.ps1`, `enterprise_install.ps1`) and Linux/macOS (`start_all.sh`, `enterprise_install.sh`)
+
+            ### Verification
+            ```bash
+            sha256sum -c zeroclaw-runtime-${{ github.ref_name }}.zip.sha256
+            ```
+          files: |
+            dist-out/zeroclaw-runtime-*.zip
+            dist-out/zeroclaw-runtime-*.zip.sha256
+          generate_release_notes: true
