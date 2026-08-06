@@ -8,23 +8,19 @@ echo =========================================================================
 echo         ZEROCLAW COMMERCE MASTER ALL-IN-ONE LAUNCHER
 echo =========================================================================
 echo.
-echo [1/4] Auto-provisioning Python Virtual Environment and dependencies...
+echo [1/3] Auto-provisioning Python Virtual Environment and dependencies...
 powershell -ExecutionPolicy Bypass -File .\install_bots.ps1
 
-echo [2/4] Starting FastAPI Commerce Gateway on port 8000...
+echo [2/3] Starting FastAPI Commerce Gateway on port 8000...
 cd fastapi-gateway
 start /b ..\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 cd ..
 
-echo [3/4] Launching Storefront Bots ^& Opening Dashboard...
+echo [3/3] Launching Storefront Bots & Opening Dashboard...
 cd telegram-bot
 start /b ..\.venv\Scripts\python.exe bot.py
 cd ..
 
-echo [4/4] Launching Kraken AI Margin Trading Engine...
-cd kraken-bot
-start /b ..\.venv\Scripts\python.exe bot.py
-cd ..
 
 timeout /t 3 >nul
 

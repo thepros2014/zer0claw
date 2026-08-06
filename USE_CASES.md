@@ -6,13 +6,13 @@ Below are the primary use cases this framework unlocks for developers building i
 
 ---
 
-## 1. Autonomous DeFi Trading Bots (The "Set and Forget" Agent)
-Currently, users rely on limit orders or manually monitoring charts. By integrating a `JupiterSwapTool` into the ZeroClaw framework, developers can build Air-Gapped Trading Agents. 
+## 1. Autonomous Treasury & Token Swap Agents (The "Set and Forget" Agent)
+Currently, merchants and DAOs manually execute treasury conversions. By integrating a `JupiterSwapTool` into the ZeroClaw framework, developers can build Air-Gapped Treasury Management Agents. 
 
 **How it works:**
-- A user provides a natural language prompt: *"Monitor my wallet. If SOL drops below $140, automatically swap 500 USDC for SOL to catch the dip."*
+- A merchant provides a natural language prompt: *"Monitor store receiving wallet. Convert 50% of incoming SOL payments to USDC whenever SOL holdings exceed 10 SOL."*
 - The ZeroClaw agent runs continuously (e.g., in a cron loop) locally on a secure machine.
-- It parses market conditions. If conditions are met, the agent securely calls the Swap tool. 
+- It parses wallet conditions. If conditions are met, the agent securely calls the Swap tool. 
 - **Security Edge:** If the LLM hallucinates and tries to swap 500,000 USDC instead, the tool's fail-closed boundary instantly rejects it.
 
 ## 2. "Intent-Based" Consumer Wallets

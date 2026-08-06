@@ -1,7 +1,8 @@
-# ZeroClaw Commerce & ZeroClaw Kraken Automagic Trading Bot 
+# ZeroClaw Commerce 🛡️
 
-2 separate dashboards, 2 completely separate servies
-One multi-channel integration, the other fully local, while using the same framework running at the same time!🛡️
+> *Zero-key payment, tax accounting, conversational AI cashier, and digital fulfillment platform built on the ZeroClaw agent ecosystem.*
+> 
+> *Available in two distinct deployments: one integrated with Telegram for remote interaction, and another completely local instance running the exact same core programming at the same time.*
 
 ![ZeroClaw Framework](https://img.shields.io/badge/Framework-ZeroClaw-blue)
 ![Solana](https://img.shields.io/badge/Blockchain-Solana-14F195?logo=solana&logoColor=black)
@@ -31,18 +32,6 @@ ZeroClaw Commerce provides `wasm32-wasip2` plugins, an async FastAPI Gateway, mu
 | **🛡️ Tier 1 Zero-Key Custody Architecture** | Bot and agent hold **ZERO private keys**. Transactions are proposed via Solana Pay and signed on consumer mobile devices. |
 | **🖱️ Automagic Master All-In-One Launcher** | Double-click `Start_ZeroClaw_Commerce.cmd` to start gateway, provision bots, and open `/dashboard` or `/setup` automatically. |
 
-## 🐙 Kraken AI: Dual-Dashboard Architecture
-
-ZeroClaw Commerce now supports a **Dual-App Architecture**, running the e-commerce storefront and a powerful Reinforcement Learning (PPO) Crypto Trading Bot side-by-side using the same underlying ZeroClaw ecosystem!
-
-The **Kraken AI Trading Engine** leverages the core ZeroClaw environment (shared Python virtual environments, unified configuration file handling, and FastAPI architecture) but operates completely independently on its own port.
-
-### How the Trading Bot Uses ZeroClaw:
-- **Environment Isolation**: Uses the exact same isolated `.venv` provisioned by ZeroClaw's automated installers.
-- **Config State**: Saves its API keys and hyperparameters to the shared root `config.json`, allowing the engine to persist state exactly like the e-commerce setup wizard.
-- **Dashboard API**: Duplicates the `fastapi-gateway` model to spin up a specialized, stripped-down Trading Dashboard (Port 8001) for monitoring RL training metrics and open positions.
-- **No Conflicts**: By running on a separate port (8001) and using a dedicated launcher (`Start_Kraken_AI.cmd`), the Trading Bot does not interfere with the E-Commerce Storefront (Port 8000).
-
 ---
 
 ## 📂 Repository Directory Structure
@@ -65,19 +54,8 @@ zer0claw/
 │   │       ├── index.html      <-- Merchant Dashboard (PIN Modal, Inventory & Inbox)
 │   │       └── setup.html      <-- First-Time Setup Wizard (Per-Channel Controls)
 │   └── requirements.txt
-├── trading-dashboard/          <-- AI Trading Dashboard API (Trading / Port 8001)
-│   ├── app/
-│   │   ├── main.py             <-- AI Metrics Endpoints & Setup Saves
-│   │   └── static/
-│   │       ├── dashboard.html  <-- Live AI Activity Log & PnL
-│   │       └── setup.html      <-- Kraken Auth & Target Pair Setup
-│   └── requirements.txt
 ├── telegram-bot/               <-- Telegram Storefront Bot Application
 │   ├── bot.py                  <-- Async Bot, NLU Natural Speech Engine & Deep Links
-│   └── requirements.txt
-├── kraken-bot/                 <-- Kraken AI Margin Trading Engine (PPO RL Model)
-│   ├── bot.py                  <-- Live Execution Engine
-│   ├── model_trainer.py        <-- PyTorch RL Trainer
 │   └── requirements.txt
 ├── skills/                     <-- Official Zer0claw Skill Manifest
 │   └── solana-commerce/
@@ -88,9 +66,7 @@ zer0claw/
 ├── zeroclaw-api/               <-- Core Plugin WIT Interfaces (Rust)
 ├── mock-cli/                   <-- Interactive Developer Demo CLI (Rust)
 ├── Start_ZeroClaw_Commerce.cmd <-- E-Commerce Master Launcher (Port 8000)
-├── Start_Kraken_AI.cmd         <-- AI Trading Master Launcher (Port 8001)
 ├── install_bots.ps1            <-- E-Commerce Dependency Installer
-├── install_kraken_ai.ps1       <-- AI Trading Dependency Installer
 ├── install_bots.sh             <-- Automated Bot Dependency Installer (Mac/Linux)
 └── README.md                   <-- Front Page Overview & Repository Sitemap
 ```

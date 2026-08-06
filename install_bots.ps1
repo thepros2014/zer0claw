@@ -32,13 +32,6 @@ Write-Host "3️⃣ Installing Discord & WhatsApp dependencies..." -ForegroundCo
 & $pip install discord.py httpx python-dotenv fastapi uvicorn --quiet
 Write-Host "   ✅ Discord & WhatsApp provisioned." -ForegroundColor Green
 
-# 4. Kraken Bot dependencies
-Write-Host "🐙 Installing Kraken Bot dependencies..." -ForegroundColor Yellow
-if (Test-Path "$PSScriptRoot\kraken-bot") {
-    & $pip install -r "$PSScriptRoot\kraken-bot\requirements.txt" --quiet
-    Write-Host "   ✅ Kraken Bot provisioned." -ForegroundColor Green
-}
-
 Write-Host "=========================================================================" -ForegroundColor Cyan
 Write-Host " 🎉 Multi-Channel Bot Installation Complete!" -ForegroundColor Green
 Write-Host "=========================================================================" -ForegroundColor Cyan
