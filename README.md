@@ -1,8 +1,8 @@
 # ZeroClaw Commerce: A Solana Payment Terminal I Actually Run on Telegram 🇧🇷
 
-[![ZeroClaw Commerce 3-Minute Video Demo](https://img.youtube.com/vi/n7GV7yaenNQ/maxresdefault.jpg)](https://youtu.be/n7GV7yaenNQ)
+[![ZeroClaw Commerce 5-Minute Video Demo](https://img.youtube.com/vi/E2j8Qy2fRNQ/maxresdefault.jpg)](https://youtu.be/E2j8Qy2fRNQ)
 
-> 🎬 **Submission Video Demo (3 min):** [Watch on YouTube (https://youtu.be/n7GV7yaenNQ)](https://youtu.be/n7GV7yaenNQ) | [Local MP4 File (`docs/Zeroclaw_video_submission.mp4`)](docs/Zeroclaw_video_submission.mp4) | [Build Log on X](https://x.com/i/status/2085312927008194732)
+> 🎬 **Submission Video Demo (5 min):** [Watch on YouTube (https://youtu.be/E2j8Qy2fRNQ)](https://youtu.be/E2j8Qy2fRNQ) | [Local MP4 File (`docs/Zeroclaw_video_voiceover.mp4`)](docs/Zeroclaw_video_voiceover.mp4) | [Build Log on X](https://x.com/i/status/2085312927008194732)
 
 **Showcase Post — Build Solana-native plugins for Zeroclaw**  
 **Author:** @thepros2014  
@@ -283,7 +283,7 @@ Dependencies: Rust toolchain, Python 3.11+, uvicorn. One evening. Verified on Wi
 ## 📎 Links
 
 - Repo: https://github.com/thepros2014/zer0claw
-- Video: https://youtu.be/n7GV7yaenNQ
+- Video: https://youtu.be/E2j8Qy2fRNQ
 - Plugin code: `zeroclaw-solana/` (WASM component)
 - Skill manifest: `skills/solana-commerce/SKILL.md`
 - SOP configs: `docs/SOP_EXAMPLES.md`
@@ -298,7 +298,7 @@ ZeroClaw Commerce is MIT licensed. Built for Superteam Brasil × ZeroClaw Labs. 
 ```text
 🦞 ZeroClaw Commerce: A Solana Payment Terminal for Telegram Shops 🇧🇷
 
-Video: [3 min — terminal + phone, no slides] https://youtu.be/n7GV7yaenNQ
+Video: [5 min — terminal + phone, narrated] https://youtu.be/E2j8Qy2fRNQ
 Repo: github.com/thepros2014/zer0claw
 
 What it does:
@@ -319,7 +319,7 @@ What I hit at the WASM boundary: waki serde_json parsing needed `#[serde(default
 
 Questions? Ping me here or @thepros2014 on X.
 
-Demo: youtu.be/n7GV7yaenNQ
+Demo: youtu.be/E2j8Qy2fRNQ
 Repo: github.com/thepros2014/zer0claw
 
 @SuperteamBR @ZeroClawLabs 🇧🇷

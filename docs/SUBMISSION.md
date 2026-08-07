@@ -3,9 +3,10 @@
 **Showcase Post — Build Solana-native plugins for Zeroclaw**  
 **Author:** @thepros2014  
 **Repo:** https://github.com/thepros2014/zer0claw  
-**Video:** [3-min demo](https://youtu.be/n7GV7yaenNQ?is=RlkLFe7mN-pYRvFO)  
+**Video:** [5-min demo (Narrated)](https://youtu.be/E2j8Qy2fRNQ)  
 **Build log:** https://x.com/i/status/2085312927008194732  
 **Voiceover Assets:** [Neural Voiceover Audio Tracks](voiceover_audio/) | [Audio Generator Script](../generate_voiceover_audio.py)
+
 
 
 ---
