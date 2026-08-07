@@ -48,43 +48,130 @@ jobs:
             zeroclaw-runtime-*.zip
             zeroclaw-runtime-*.zip.sha256
 
+  build-single-file-executables:
+    name: Build Single-File Release Executables (${{ matrix.os }})
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform_tag: windows-x86_64
+            exe_ext: .exe
+          - os: macos-latest
+            platform_tag: macos-aarch64
+            exe_ext: ""
+          - os: ubuntu-latest
+            platform_tag: linux-x86_64
+            exe_ext: ""
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python Dependencies & PyInstaller
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller -r fastapi-gateway/requirements.txt -r telegram-bot/requirements.txt
+
+      - name: Build Single-File App Executable
+        run: python build_release.py
+
+      - name: Build Rust Mock CLI Executable
+        run: cargo build --release --package mock-cli
+
+      - name: Stage Single-File Executables
+        shell: bash
+        run: |
+          mkdir -p bin-stage
+          cp dist/zeroclaw-commerce-${{ matrix.platform_tag }}${{ matrix.exe_ext }} bin-stage/
+          if [ "${{ matrix.exe_ext }}" = ".exe" ]; then
+            cp target/release/mock-cli.exe bin-stage/mock-cli-${{ matrix.platform_tag }}.exe
+          else
+            cp target/release/mock-cli bin-stage/mock-cli-${{ matrix.platform_tag }}
+          fi
+          cd bin-stage
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum * > checksums-${{ matrix.platform_tag }}.sha256
+          else
+            shasum -a 256 * > checksums-${{ matrix.platform_tag }}.sha256
+          fi
+
+      - name: Upload Single-File Executables
+        uses: actions/upload-artifact@v4
+        with:
+          name: single-file-executables-${{ matrix.platform_tag }}
+          path: bin-stage/*
+
   release:
     name: Create GitHub Release
-    needs: build-wasm
+    needs: [build-wasm, build-single-file-executables]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Download build artifacts
+      - name: Download WASM artifacts
         uses: actions/download-artifact@v4
         with:
           name: wasm-release
           path: dist-out
 
+      - name: Download Windows single-file binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: single-file-executables-windows-x86_64
+          path: dist-out
+
+      - name: Download macOS single-file binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: single-file-executables-macos-aarch64
+          path: dist-out
+
+      - name: Download Linux single-file binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: single-file-executables-linux-x86_64
+          path: dist-out
+
       - name: Create Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
-          name: ZeroClaw Runtime ${{ github.ref_name }}
+          name: ZeroClaw Commerce ${{ github.ref_name }}
           body: |
-            ## ZeroClaw Runtime ${{ github.ref_name }}
+            ## ZeroClaw Commerce ${{ github.ref_name }} Standalone Single-File Releases
 
-            ### Artifacts
+            ### Standalone Single-File Executables (Zero-Dependency)
+            | Platform | File | Description |
+            |----------|------|-------------|
+            | **Windows** | `zeroclaw-commerce-windows-x86_64.exe` | Single-file executable (FastAPI + Telegram Bot + Web UI) |
+            | **Windows CLI** | `mock-cli-windows-x86_64.exe` | Standalone Rust Tier 1 Mock CLI |
+            | **Apple macOS** | `zeroclaw-commerce-macos-aarch64` | Apple Silicon single-file executable |
+            | **Apple macOS CLI** | `mock-cli-macos-aarch64` | Standalone Rust Tier 1 Mock CLI |
+            | **Linux** | `zeroclaw-commerce-linux-x86_64` | Linux x86_64 single-file executable |
+            | **Linux CLI** | `mock-cli-linux-x86_64` | Standalone Rust Tier 1 Mock CLI |
+
+            ### Additional Runtime Bundles
             | File | Description |
             |------|-------------|
-            | `zeroclaw-runtime-${{ github.ref_name }}.zip` | Full runtime bundle — WASM plugins + launcher scripts |
-            | `zeroclaw-runtime-${{ github.ref_name }}.zip.sha256` | SHA-256 checksum |
+            | `zeroclaw-runtime-${{ github.ref_name }}.zip` | WASM plugins + script launcher bundle |
+            | `zeroclaw-runtime-${{ github.ref_name }}.zip.sha256` | WASM bundle checksum |
 
-            ### Contents
-            - `plugins/zeroclaw_solana.wasm` — Token risk engine & durable nonce helper (wasm32-wasip2)
-            - `plugins/zeroclaw_accounting.wasm` — Dual-currency tax log (wasm32-wasip2)
-            - `zeroclaw.toml` — Default node configuration
-            - Launcher scripts for Windows (`Start_ZeroClaw_Commerce.cmd`, `start_all.ps1`, `install_bots.ps1`, `enterprise_install.ps1`) and Linux/macOS (`start_all.sh`, `enterprise_install.sh`)
-
-            ### Verification
+            ### Quick Start (Single-File Binary)
+            Double-click or run the executable directly from your terminal with no installation required:
             ```bash
-            sha256sum -c zeroclaw-runtime-${{ github.ref_name }}.zip.sha256
+            # On Linux / macOS:
+            chmod +x zeroclaw-commerce-linux-x86_64
+            ./zeroclaw-commerce-linux-x86_64
+
+            # On Windows:
+            .\zeroclaw-commerce-windows-x86_64.exe
             ```
           files: |
-            dist-out/zeroclaw-runtime-*.zip
-            dist-out/zeroclaw-runtime-*.zip.sha256
+            dist-out/*
           generate_release_notes: true

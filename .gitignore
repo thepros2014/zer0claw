@@ -46,6 +46,8 @@ dist/
 build/
 *.egg-info/
 *.session
+*.spec
+releases/
 
 # Merchant Configurations & Credentials (DO NOT COMMIT)
 config.json

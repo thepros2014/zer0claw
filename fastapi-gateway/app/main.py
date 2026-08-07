@@ -89,6 +89,7 @@ def mask_secret(val: Any) -> str:
     return f"{val[:3]}...{val[-3:]}"
 
 
+CWD_CONFIG_FILE = os.path.abspath("config.json")
 CONFIG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "config.json"))
 ROOT_CONFIG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "config.json"))
 
@@ -96,7 +97,7 @@ ROOT_CONFIG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 @app.get("/api/v1/setup/status", tags=["Setup"])
 async def get_setup_status():
     """Returns whether first-time setup has been completed."""
-    for cfg in [CONFIG_FILE, ROOT_CONFIG_FILE]:
+    for cfg in [CWD_CONFIG_FILE, CONFIG_FILE, ROOT_CONFIG_FILE]:
         if os.path.exists(cfg):
             try:
                 with open(cfg, "r", encoding="utf-8") as f:
@@ -122,7 +123,7 @@ async def save_merchant_setup(config: Dict[str, Any]):
     config["setup_completed"] = True
     config["updated_at"] = int(time.time())
 
-    for cfg in [CONFIG_FILE, ROOT_CONFIG_FILE]:
+    for cfg in [CWD_CONFIG_FILE, CONFIG_FILE, ROOT_CONFIG_FILE]:
         try:
             with open(cfg, "w", encoding="utf-8") as f:
                 json.dump(config, f, indent=2)
@@ -164,7 +165,7 @@ async def verify_admin_pin(payload: Dict[str, Any]):
     submitted_hash = _hash_pin(pin)
     saved_hash: str | None = None
 
-    for cfg in [CONFIG_FILE, ROOT_CONFIG_FILE]:
+    for cfg in [CWD_CONFIG_FILE, CONFIG_FILE, ROOT_CONFIG_FILE]:
         if os.path.exists(cfg):
             try:
                 with open(cfg, "r", encoding="utf-8") as f:
