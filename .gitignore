@@ -51,3 +51,7 @@ build/
 config.json
 */config.json
 *.json.secret
+
+# Media Files
+*.mp4
+
