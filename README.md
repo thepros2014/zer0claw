@@ -1,14 +1,17 @@
 # ZeroClaw Commerce: A Solana Payment Terminal I Actually Run on Telegram 🇧🇷
 
+[![ZeroClaw Commerce 3-Minute Video Demo](https://img.youtube.com/vi/n7GV7yaenNQ/maxresdefault.jpg)](https://youtu.be/n7GV7yaenNQ)
+
+> 🎬 **Submission Video Demo (3 min):** [Watch on YouTube (https://youtu.be/n7GV7yaenNQ)](https://youtu.be/n7GV7yaenNQ) | [Local MP4 File (`docs/Zeroclaw_video_submission.mp4`)](docs/Zeroclaw_video_submission.mp4) | [Build Log on X](https://x.com/i/status/2085312927008194732)
+
 **Showcase Post — Build Solana-native plugins for Zeroclaw**  
 **Author:** @thepros2014  
 **Repo:** https://github.com/thepros2014/zer0claw  
-**Video:** https://youtu.be/n7GV7yaenNQ
 
 ![ZeroClaw Framework](https://img.shields.io/badge/Framework-ZeroClaw-blue)
 ![Solana](https://img.shields.io/badge/Blockchain-Solana-14F195?logo=solana&logoColor=black)
 ![Architecture](https://img.shields.io/badge/Architecture-wasm32--wasip2-orange)
-![Release](https://img.shields.io/badge/Release-v1.1.0-green)
+![Release](https://img.shields.io/badge/Release-v1.5.0-green)
 ![License](https://img.shields.io/badge/License-MIT-green)
 [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub-ea4aaa?logo=github-sponsors)](https://github.com/sponsors/thepros2014)
 
